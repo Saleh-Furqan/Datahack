@@ -52,6 +52,10 @@ wheels/
 *~
 .DS_Store
 
+# Cache directories
+.cache/
+.claude/
+
 # Environment variables
 .env
 .env.local
