@@ -9,6 +9,7 @@ import pandas as pd
 import geopandas as gpd
 from pathlib import Path
 import json
+import re
 
 data_dir = Path(__file__).parent.parent / 'data' / 'raw'
 
@@ -20,6 +21,55 @@ HK_LAT_MIN, HK_LAT_MAX = 22.15, 22.58
 HK_LON_MIN, HK_LON_MAX = 113.83, 114.41
 
 validation_results = {}
+
+LAT_ALIASES = {
+    "latitude",
+    "lat",
+    "y",
+    "northing",
+}
+
+LON_ALIASES = {
+    "longitude",
+    "lon",
+    "lng",
+    "lgt",
+    "x",
+    "easting",
+}
+
+
+def normalize_column_name(name):
+    """Normalize column names for robust matching across datasets."""
+    if name is None:
+        return ""
+    text = str(name).replace("\ufeff", "").strip().lower()
+    return re.sub(r"[^a-z0-9]", "", text)
+
+
+def find_matching_column(columns, aliases):
+    """Return the first column whose normalized name matches an alias."""
+    normalized = {normalize_column_name(col): col for col in columns}
+    for alias in aliases:
+        match = normalized.get(normalize_column_name(alias))
+        if match:
+            return match
+    return None
+
+
+def resolve_coordinate_columns(columns, preferred_lat=None, preferred_lon=None):
+    """Resolve coordinate columns from common naming variants."""
+    lat_aliases = set(LAT_ALIASES)
+    lon_aliases = set(LON_ALIASES)
+
+    if preferred_lat:
+        lat_aliases.add(preferred_lat)
+    if preferred_lon:
+        lon_aliases.add(preferred_lon)
+
+    lat_col = find_matching_column(columns, lat_aliases)
+    lon_col = find_matching_column(columns, lon_aliases)
+    return lat_col, lon_col
 
 def validate_coordinates(df, lat_col, lon_col, dataset_name):
     """Validate that coordinates are within Hong Kong bounds"""
@@ -47,7 +97,7 @@ def validate_coordinates(df, lat_col, lon_col, dataset_name):
 
     return issues
 
-def check_file(filename, expected_cols, lat_col=None, lon_col=None):
+def check_file(filename, expected_cols=None, lat_col=None, lon_col=None):
     """Check if file exists and has required structure"""
     filepath = data_dir / filename
 
@@ -56,6 +106,7 @@ def check_file(filename, expected_cols, lat_col=None, lon_col=None):
         "readable": False,
         "row_count": 0,
         "columns": [],
+        "coordinate_columns": {},
         "issues": []
     }
 
@@ -81,15 +132,26 @@ def check_file(filename, expected_cols, lat_col=None, lon_col=None):
         result["row_count"] = len(df)
         result["columns"] = list(df.columns)
 
-        # Check for expected columns
-        missing_cols = set(expected_cols) - set(df.columns)
-        if missing_cols:
-            result["issues"].append(f"Missing expected columns: {missing_cols}")
+        # Check for expected columns (normalized match)
+        if expected_cols:
+            normalized_columns = {normalize_column_name(col) for col in df.columns}
+            missing_cols = [
+                col for col in expected_cols
+                if normalize_column_name(col) not in normalized_columns
+            ]
+            if missing_cols:
+                result["issues"].append(f"Missing expected columns: {set(missing_cols)}")
 
-        # Validate coordinates if specified
-        if lat_col and lon_col:
-            coord_issues = validate_coordinates(df, lat_col, lon_col, filename)
+        # Validate coordinates with flexible column matching
+        resolved_lat, resolved_lon = resolve_coordinate_columns(df.columns, lat_col, lon_col)
+        if resolved_lat and resolved_lon:
+            result["coordinate_columns"] = {"lat": resolved_lat, "lon": resolved_lon}
+            coord_issues = validate_coordinates(df, resolved_lat, resolved_lon, filename)
             result["issues"].extend(coord_issues)
+        elif lat_col or lon_col:
+            result["issues"].append(
+                "Missing coordinate columns (accepted aliases: latitude/lat and longitude/lon/lgt)"
+            )
 
         # Check for duplicates
         if len(df) != len(df.drop_duplicates()):
@@ -104,19 +166,19 @@ def check_file(filename, expected_cols, lat_col=None, lon_col=None):
 # Define expected structure for each dataset
 datasets_to_check = {
     "recycling_stations.csv": {
-        "expected_cols": ["Latitude", "Longitude"],  # Adjust based on actual column names
+        "expected_cols": [],
         "lat_col": "Latitude",
         "lon_col": "Longitude",
         "priority": "CRITICAL"
     },
     "collection_points.csv": {
-        "expected_cols": ["Latitude", "Longitude"],
+        "expected_cols": [],
         "lat_col": "Latitude",
         "lon_col": "Longitude",
         "priority": "CRITICAL"
     },
     "public_housing.csv": {
-        "expected_cols": ["Latitude", "Longitude"],
+        "expected_cols": [],
         "lat_col": "Latitude",
         "lon_col": "Longitude",
         "priority": "CRITICAL"
@@ -149,6 +211,11 @@ for filename, spec in datasets_to_check.items():
     if result["readable"]:
         print(f"  ✓ Readable ({result['row_count']} rows)")
         print(f"  Columns: {', '.join(result['columns'][:5])}...")
+        if result["coordinate_columns"]:
+            print(
+                f"  ✓ Coordinate columns detected: "
+                f"{result['coordinate_columns']['lat']}, {result['coordinate_columns']['lon']}"
+            )
     elif result["exists"]:
         print(f"  ✗ Cannot read file")
         if spec['priority'] == 'CRITICAL':

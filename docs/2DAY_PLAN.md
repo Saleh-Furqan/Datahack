@@ -88,9 +88,10 @@ Forget the elaborate 4-week plan. Here's what will actually win in a 48-hour hac
 
 2. **Impact Dashboard**
    - Big numbers:
-     - "2.1M residents currently underserved"
-     - "Our 25 micro-hubs serve 1.6M (76% improvement)"
-     - "Estimated 8,500 tons/year diverted from landfills"
+     - "[X] residents currently underserved (>500m)"
+     - "[Y] residents newly served with 25 hubs ([Z]% improvement)"
+     - "Median distance reduced: [A]m -> [B]m"
+     - "Optional (only if sourced): estimated annual waste diversion range"
    - Simple bar charts
 
 3. **Top 10 Priority Locations**
@@ -198,7 +199,7 @@ Forget the elaborate 4-week plan. Here's what will actually win in a 48-hour hac
 - Behavioral economics modeling
 - Mobile collection routes
 - Demographic deep dives
-- Multiple scenarios/what-if analysis
+- More than two policy scenarios or full what-if tooling
 - Interactive dashboards
 - 3D visualizations
 
@@ -273,6 +274,7 @@ datahack/
 ## The Winning Pitch (30-Second Version)
 
 > "2.3 million Hong Kong residents live more than 500 meters from a recycling station. Using government data, we identified exactly where they are and where to place 25 new micro-hubs to serve 1.6 million of them. This would divert an estimated 8,500 tons per year from landfills at a cost of just $200K. Here's the map."
+> "[X]% of Hong Kong residents live more than 500 meters from a recycling point. Using government data, we identified where those gaps are and where to place 25 new micro-hubs to maximize newly served residents. This improves <300m coverage by [Y] percentage points at an estimated cost range of [C]-[D]. Here's the map."
 
 **Then show the before/after map. That's your mic drop moment.**
 
