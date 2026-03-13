@@ -59,13 +59,53 @@ Our project will be assessed on:
 
 ## Getting Started
 
+### Setup (Already Done)
+
 ```bash
 # Clone the repository
-git clone <repository-url>
+git clone https://github.com/Saleh-Furqan/Datahack.git
+cd Datahack
 
-# Install dependencies (TBD based on tools chosen)
-# pip install -r requirements.txt
+# Activate virtual environment
+source venv/bin/activate
+
+# All dependencies already installed
+# See requirements.txt for package list
 ```
+
+### Quick Start
+
+1. **Download datasets** (START HERE)
+   ```bash
+   python3 scripts/download_data.py
+   ```
+   This shows URLs for all required datasets. Download the 3 CRITICAL ones first.
+
+2. **Validate data**
+   ```bash
+   python3 scripts/validate_data.py
+   ```
+
+3. **Read the plan**
+   - [QUICK_START.md](QUICK_START.md) - Start here
+   - [docs/TECHNICAL_PLAN.md](docs/TECHNICAL_PLAN.md) - Complete technical guide
+   - [docs/2DAY_PLAN.md](docs/2DAY_PLAN.md) - Timeline and execution
+
+4. **Start analyzing**
+   - Work through notebooks in order
+   - Follow the technical plan
+
+### The Winning Strategy
+
+**Project:** "The 500-Meter Problem" - Optimizing Hong Kong's recycling access
+
+**Deliverables:**
+- Data-driven proof that millions are underserved (>500m from recycling)
+- 15-25 specific locations for new micro-hubs
+- Beautiful before/after maps
+- Quantified impact metrics
+
+**Timeline:** 48 hours (2 days)
 
 ## Progress Tracker
 
