@@ -1,251 +1,250 @@
 #!/usr/bin/env python3
 """
-Data validation script for DataHack 2026
-Checks that downloaded datasets are ready for analysis
+Validate local datasets needed for the current analysis pipeline.
+
+Required inputs:
+  - data/raw/collection_points.csv
+  - data/raw/public_housing.json
 """
 
-import pandas as pd
-from pathlib import Path
+from __future__ import annotations
+
 import json
 import re
+import sys
+from pathlib import Path
 
-data_dir = Path(__file__).parent.parent / 'data' / 'raw'
+import pandas as pd
 
-print("DataHack 2026 - Data Validation Script")
-print("=" * 50)
+ROOT = Path(__file__).parent.parent
+RAW_DIR = ROOT / "data" / "raw"
+REPORT_PATH = ROOT / "data" / "validation_report.json"
 
-# Hong Kong coordinate boundaries
-HK_LAT_MIN, HK_LAT_MAX = 22.15, 22.58
-HK_LON_MIN, HK_LON_MAX = 113.83, 114.41
-
-validation_results = {}
-
-LAT_ALIASES = {
-    "latitude",
-    "lat",
-    "y",
-    "northing",
-}
-
-LON_ALIASES = {
-    "longitude",
-    "lon",
-    "lng",
-    "lgt",
-    "x",
-    "easting",
+HK_BOUNDS = {
+    "lat_min": 22.0,
+    "lat_max": 22.7,
+    "lon_min": 113.7,
+    "lon_max": 114.6,
 }
 
 
-def normalize_column_name(name):
-    """Normalize column names for robust matching across datasets."""
-    if name is None:
-        return ""
-    text = str(name).replace("\ufeff", "").strip().lower()
-    return re.sub(r"[^a-z0-9]", "", text)
+def parse_flat_count(value: object) -> int | None:
+    """Extract rental-flat integer from values like '1 000 * as at 31.12.2025'."""
+    if isinstance(value, dict):
+        value = value.get("en") or value.get("zh-Hant") or value.get("zh-Hans")
+    if not isinstance(value, str):
+        return None
+
+    head = value.split("as at")[0]
+    match = re.search(r"\d[\d ,]*", head)
+    if not match:
+        return None
+
+    digits = re.sub(r"[^\d]", "", match.group(0))
+    return int(digits) if digits else None
 
 
-def find_matching_column(columns, aliases):
-    """Return the first column whose normalized name matches an alias."""
-    normalized = {normalize_column_name(col): col for col in columns}
-    for alias in aliases:
-        match = normalized.get(normalize_column_name(alias))
-        if match:
-            return match
-    return None
-
-
-def resolve_coordinate_columns(columns, preferred_lat=None, preferred_lon=None):
-    """Resolve coordinate columns from common naming variants."""
-    lat_aliases = set(LAT_ALIASES)
-    lon_aliases = set(LON_ALIASES)
-
-    if preferred_lat:
-        lat_aliases.add(preferred_lat)
-    if preferred_lon:
-        lon_aliases.add(preferred_lon)
-
-    lat_col = find_matching_column(columns, lat_aliases)
-    lon_col = find_matching_column(columns, lon_aliases)
-    return lat_col, lon_col
-
-def validate_coordinates(df, lat_col, lon_col, dataset_name):
-    """Validate that coordinates are within Hong Kong bounds"""
-    issues = []
-
-    if lat_col not in df.columns or lon_col not in df.columns:
-        return [f"Missing coordinate columns: {lat_col}, {lon_col}"]
-
-    # Check for missing values
-    missing_lat = df[lat_col].isna().sum()
-    missing_lon = df[lon_col].isna().sum()
-    if missing_lat > 0 or missing_lon > 0:
-        issues.append(f"Missing coordinates: {missing_lat} lat, {missing_lon} lon")
-
-    # Check bounds
-    valid_df = df.dropna(subset=[lat_col, lon_col])
-    if len(valid_df) > 0:
-        out_of_bounds = (
-            (valid_df[lat_col] < HK_LAT_MIN) | (valid_df[lat_col] > HK_LAT_MAX) |
-            (valid_df[lon_col] < HK_LON_MIN) | (valid_df[lon_col] > HK_LON_MAX)
-        ).sum()
-
-        if out_of_bounds > 0:
-            issues.append(f"Coordinates out of HK bounds: {out_of_bounds} rows")
-
-    return issues
-
-def check_file(filename, expected_cols=None, lat_col=None, lon_col=None):
-    """Check if file exists and has required structure"""
-    filepath = data_dir / filename
-
-    result = {
-        "exists": False,
+def validate_collection_points(path: Path) -> dict:
+    report = {
+        "exists": path.exists(),
         "readable": False,
         "row_count": 0,
         "columns": [],
-        "coordinate_columns": {},
-        "issues": []
+        "issues": [],
+        "public_access_points": 0,
+        "restricted_points": 0,
+        "invalid_coordinate_rows": 0,
+        "out_of_hk_bounds_rows": 0,
     }
 
-    if not filepath.exists():
-        result["issues"].append("File not found")
-        return result
-
-    result["exists"] = True
+    if not path.exists():
+        report["issues"].append("File not found")
+        return report
 
     try:
-        # Try reading as CSV
-        if filename.endswith('.csv'):
-            df = pd.read_csv(filepath)
-        elif filename.endswith('.json'):
-            df = pd.read_json(filepath)
-        elif filename.endswith(('.xls', '.xlsx')):
-            df = pd.read_excel(filepath)
-        else:
-            result["issues"].append(f"Unknown file format: {filename}")
-            return result
+        df = pd.read_csv(path, encoding="utf-8-sig")
+    except Exception as exc:  # pragma: no cover - defensive
+        report["issues"].append(f"Unable to read CSV: {exc}")
+        return report
 
-        result["readable"] = True
-        result["row_count"] = len(df)
-        result["columns"] = list(df.columns)
+    report["readable"] = True
+    report["row_count"] = int(len(df))
+    report["columns"] = [str(c) for c in df.columns]
 
-        # Check for expected columns (normalized match)
-        if expected_cols:
-            normalized_columns = {normalize_column_name(col) for col in df.columns}
-            missing_cols = [
-                col for col in expected_cols
-                if normalize_column_name(col) not in normalized_columns
-            ]
-            if missing_cols:
-                result["issues"].append(f"Missing expected columns: {set(missing_cols)}")
+    required_cols = {"lat", "lgt", "accessibilty_notes"}
+    missing_cols = sorted(required_cols - set(df.columns))
+    if missing_cols:
+        report["issues"].append(
+            f"Missing required columns: {', '.join(missing_cols)}"
+        )
+        return report
 
-        # Validate coordinates with flexible column matching
-        resolved_lat, resolved_lon = resolve_coordinate_columns(df.columns, lat_col, lon_col)
-        if resolved_lat and resolved_lon:
-            result["coordinate_columns"] = {"lat": resolved_lat, "lon": resolved_lon}
-            coord_issues = validate_coordinates(df, resolved_lat, resolved_lon, filename)
-            result["issues"].extend(coord_issues)
-        elif lat_col or lon_col:
-            result["issues"].append(
-                "Missing coordinate columns (accepted aliases: latitude/lat and longitude/lon/lgt)"
-            )
+    lat = pd.to_numeric(df["lat"], errors="coerce")
+    lon = pd.to_numeric(df["lgt"], errors="coerce")
+    invalid_mask = lat.isna() | lon.isna()
+    report["invalid_coordinate_rows"] = int(invalid_mask.sum())
 
-        # Check for duplicates
-        if len(df) != len(df.drop_duplicates()):
-            dup_count = len(df) - len(df.drop_duplicates())
-            result["issues"].append(f"Duplicate rows: {dup_count}")
+    in_bounds_mask = (
+        (lat >= HK_BOUNDS["lat_min"])
+        & (lat <= HK_BOUNDS["lat_max"])
+        & (lon >= HK_BOUNDS["lon_min"])
+        & (lon <= HK_BOUNDS["lon_max"])
+    )
+    out_of_bounds_mask = (~invalid_mask) & (~in_bounds_mask)
+    report["out_of_hk_bounds_rows"] = int(out_of_bounds_mask.sum())
 
-    except Exception as e:
-        result["issues"].append(f"Error reading file: {str(e)}")
+    access = df["accessibilty_notes"].fillna("").astype(str)
+    public_mask = access.str.contains("For public use", case=False, na=False)
+    report["public_access_points"] = int(public_mask.sum())
+    report["restricted_points"] = int((~public_mask).sum())
 
-    return result
+    if report["row_count"] == 0:
+        report["issues"].append("No rows found")
+    if report["invalid_coordinate_rows"] > 0:
+        report["issues"].append(
+            f"Invalid coordinates: {report['invalid_coordinate_rows']} rows"
+        )
+    if report["out_of_hk_bounds_rows"] > 0:
+        report["issues"].append(
+            f"Coordinates out of HK bounds: {report['out_of_hk_bounds_rows']} rows"
+        )
+    if report["public_access_points"] == 0:
+        report["issues"].append("No public-access points detected")
 
-# Define expected structure for each dataset
-datasets_to_check = {
-    "recycling_stations.csv": {
-        "expected_cols": [],
-        "lat_col": "Latitude",
-        "lon_col": "Longitude",
-        "priority": "CRITICAL"
-    },
-    "collection_points.csv": {
-        "expected_cols": [],
-        "lat_col": "Latitude",
-        "lon_col": "Longitude",
-        "priority": "CRITICAL"
-    },
-    "public_housing.csv": {
-        "expected_cols": [],
-        "lat_col": "Latitude",
-        "lon_col": "Longitude",
-        "priority": "CRITICAL"
-    },
-    "private_buildings.csv": {
-        "expected_cols": ["District"],  # May not have coordinates
-        "lat_col": None,
-        "lon_col": None,
-        "priority": "IMPORTANT"
+    return report
+
+
+def validate_public_housing_json(path: Path) -> dict:
+    report = {
+        "exists": path.exists(),
+        "readable": False,
+        "row_count": 0,
+        "issues": [],
+        "invalid_coordinate_rows": 0,
+        "flats_parse_fail_rows": 0,
+        "population_proxy_total": 0,
     }
-}
 
-print("\nValidating datasets...\n")
+    if not path.exists():
+        report["issues"].append("File not found")
+        return report
 
-critical_ready = True
-for filename, spec in datasets_to_check.items():
-    print(f"[{spec['priority']}] {filename}")
-    result = check_file(filename, spec["expected_cols"],
-                       spec.get("lat_col"), spec.get("lon_col"))
+    try:
+        with path.open() as f:
+            data = json.load(f)
+    except Exception as exc:  # pragma: no cover - defensive
+        report["issues"].append(f"Unable to read JSON: {exc}")
+        return report
 
-    validation_results[filename] = result
+    if not isinstance(data, list):
+        report["issues"].append("Expected a JSON list of estates")
+        return report
 
-    if result["exists"]:
-        print(f"  ✓ File exists")
-    else:
-        print(f"  ✗ File not found")
-        if spec['priority'] == 'CRITICAL':
-            critical_ready = False
+    report["readable"] = True
+    report["row_count"] = len(data)
+    if report["row_count"] == 0:
+        report["issues"].append("No rows found")
+        return report
 
-    if result["readable"]:
-        print(f"  ✓ Readable ({result['row_count']} rows)")
-        print(f"  Columns: {', '.join(result['columns'][:5])}...")
-        if result["coordinate_columns"]:
-            print(
-                f"  ✓ Coordinate columns detected: "
-                f"{result['coordinate_columns']['lat']}, {result['coordinate_columns']['lon']}"
+    invalid_coord = 0
+    parse_fail = 0
+    pop_total = 0
+    for row in data:
+        try:
+            lat = float(row.get("Estate Map Latitude"))
+            lon = float(row.get("Estate Map Longitude"))
+        except Exception:
+            lat, lon = None, None
+
+        if lat is None or lon is None:
+            invalid_coord += 1
+        else:
+            in_bounds = (
+                HK_BOUNDS["lat_min"] <= lat <= HK_BOUNDS["lat_max"]
+                and HK_BOUNDS["lon_min"] <= lon <= HK_BOUNDS["lon_max"]
             )
-    elif result["exists"]:
-        print(f"  ✗ Cannot read file")
-        if spec['priority'] == 'CRITICAL':
-            critical_ready = False
+            if not in_bounds:
+                invalid_coord += 1
 
-    if result["issues"]:
-        for issue in result["issues"]:
-            print(f"  ⚠ {issue}")
+        flats = parse_flat_count(row.get("No. of Rental Flats"))
+        if flats is None:
+            parse_fail += 1
+        else:
+            pop_total += int(flats * 2.7)
 
-    print()
+    report["invalid_coordinate_rows"] = int(invalid_coord)
+    report["flats_parse_fail_rows"] = int(parse_fail)
+    report["population_proxy_total"] = int(pop_total)
 
-print("=" * 50)
-print("VALIDATION SUMMARY")
-print("=" * 50)
+    if report["invalid_coordinate_rows"] > 0:
+        report["issues"].append(
+            f"Invalid/out-of-bounds coordinates: {report['invalid_coordinate_rows']} rows"
+        )
+    if report["flats_parse_fail_rows"] > 0:
+        report["issues"].append(
+            f"Could not parse rental flats: {report['flats_parse_fail_rows']} rows"
+        )
 
-if critical_ready:
-    print("✓ All CRITICAL datasets ready")
-    print("You can proceed to data cleaning phase")
-    print("\nNext step: Open notebooks/02_data_cleaning.ipynb")
-else:
-    print("✗ CRITICAL datasets missing or have issues")
-    print("\nOPTIONS:")
-    print("1. Fix the issues listed above")
-    print("2. PIVOT to Public Housing Only mode")
-    print("   - Focus analysis on just public housing + recycling points")
-    print("   - Still high impact (45% of HK population)")
-    print("   - Simpler, faster analysis")
+    return report
 
-print("\n" + "=" * 50)
 
-# Save validation report
-report_path = data_dir.parent / 'validation_report.json'
-with open(report_path, 'w') as f:
-    json.dump(validation_results, f, indent=2)
-print(f"\nValidation report saved to: {report_path}")
+def optional_file_status(path: Path) -> dict:
+    return {
+        "exists": path.exists(),
+        "readable": path.exists(),
+        "issues": [] if path.exists() else ["File not found (optional)"],
+    }
+
+
+def main() -> int:
+    print("DataHack 2026 - Data Validation")
+    print("=" * 50)
+
+    results = {
+        "collection_points.csv": validate_collection_points(
+            RAW_DIR / "collection_points.csv"
+        ),
+        "public_housing.json": validate_public_housing_json(
+            RAW_DIR / "public_housing.json"
+        ),
+        "recycling_stations.csv": optional_file_status(RAW_DIR / "recycling_stations.csv"),
+        "private_buildings.csv": optional_file_status(RAW_DIR / "private_buildings.csv"),
+        "private_buildings.json": optional_file_status(RAW_DIR / "private_buildings.json"),
+    }
+
+    REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with REPORT_PATH.open("w") as f:
+        json.dump(results, f, indent=2)
+
+    required = ["collection_points.csv", "public_housing.json"]
+    has_required_failure = False
+
+    for name, status in results.items():
+        issues = status.get("issues", [])
+        if name in required:
+            valid = status.get("exists") and status.get("readable") and not issues
+            label = "PASS" if valid else "FAIL"
+            if not valid:
+                has_required_failure = True
+        else:
+            label = "OK" if status.get("exists") else "SKIP"
+
+        print(f"[{label}] {name}")
+        if status.get("exists"):
+            row_count = status.get("row_count")
+            if row_count is not None:
+                print(f"  Rows: {row_count:,}")
+        for issue in issues:
+            print(f"  - {issue}")
+
+    print("\nReport saved to data/validation_report.json")
+    if has_required_failure:
+        print("Validation failed for required datasets.")
+        return 1
+
+    print("Required datasets validated successfully.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

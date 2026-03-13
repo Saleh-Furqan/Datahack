@@ -1,31 +1,27 @@
 # Data Directory
 
-This directory contains all datasets used in the project.
-
 ## Structure
 
-- `raw/` - Original, unmodified datasets
-- `processed/` - Cleaned and transformed data ready for analysis
-- `external/` - Third-party data sources
+- `raw/` local downloaded source datasets (not committed)
+- `processed/` generated outputs used by the team (committed)
 
-## Datasets
+## Required Raw Files for Current Pipeline
 
-### Required Datasets for DataHack 2026
+Place these in `data/raw/`:
 
-1. **Open Space Database of Recycling Stations**
-2. **Recyclable Collection Points Data**
-3. **Waste Management Facilities locations**
-4. **Historical solid waste recovery trends**
-5. **Public Housing Estates profiles and locations**
-6. **Private Buildings Database**
-7. **2021 Population Census data**
+1. `collection_points.csv`
+2. `public_housing.json`
 
-## Data Sources
+Use `python3 scripts/download_data.py` for source URLs and naming guidance.
 
-Document all data sources with proper attribution here.
+## Validation
 
-## Notes
+Run:
 
-- Large data files are excluded from git (see .gitignore)
-- Always document data preprocessing steps in notebooks/
-- Keep raw data intact; save transformations to processed/
+```bash
+python3 scripts/validate_data.py
+```
+
+Validation report will be written to:
+
+- `data/validation_report.json`

@@ -1,0 +1,64 @@
+{
+  "collection_points.csv": {
+    "exists": true,
+    "readable": true,
+    "row_count": 8858,
+    "columns": [
+      "cp_id",
+      "cp_state",
+      "district_id",
+      "address_en",
+      "address2_en",
+      "address_tc",
+      "address2_tc",
+      "address_sc",
+      "address2_sc",
+      "lat",
+      "lgt",
+      "waste_type",
+      "legend",
+      "accessibilty_notes",
+      "contact_en",
+      "contact_tc",
+      "contact_sc",
+      "openhour_en",
+      "openhour_tc",
+      "openhour_sc"
+    ],
+    "issues": [],
+    "public_access_points": 5301,
+    "restricted_points": 3557,
+    "invalid_coordinate_rows": 0,
+    "out_of_hk_bounds_rows": 0
+  },
+  "public_housing.json": {
+    "exists": true,
+    "readable": true,
+    "row_count": 241,
+    "issues": [],
+    "invalid_coordinate_rows": 0,
+    "flats_parse_fail_rows": 0,
+    "population_proxy_total": 2262060
+  },
+  "recycling_stations.csv": {
+    "exists": false,
+    "readable": false,
+    "issues": [
+      "File not found (optional)"
+    ]
+  },
+  "private_buildings.csv": {
+    "exists": false,
+    "readable": false,
+    "issues": [
+      "File not found (optional)"
+    ]
+  },
+  "private_buildings.json": {
+    "exists": false,
+    "readable": false,
+    "issues": [
+      "File not found (optional)"
+    ]
+  }
+}

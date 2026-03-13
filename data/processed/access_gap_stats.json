@@ -1,0 +1,44 @@
+{
+  "metadata": {
+    "analysis_type": "open_access_gap",
+    "severe_penalty_threshold_m": 80,
+    "high_penalty_threshold_m": 100
+  },
+  "collection_points": {
+    "total_points": 8858,
+    "public_points": 5301,
+    "restricted_points": 3557,
+    "public_percentage": 59.84420862497177
+  },
+  "housing": {
+    "estate_count": 241,
+    "population_proxy_total": 2262060,
+    "flat_parse_fallbacks": 0
+  },
+  "scenario_all": {
+    "median_distance_m": 26.539642881498402,
+    "well_served_pop": 2262060,
+    "moderate_pop": 0,
+    "underserved_pop": 0
+  },
+  "scenario_public_only": {
+    "median_distance_m": 38.63385655091665,
+    "well_served_pop": 2262060,
+    "moderate_pop": 0,
+    "underserved_pop": 0
+  },
+  "gap": {
+    "median_distance_penalty_m": 12.094213669418245,
+    "mean_openness_penalty_m": 14.443553836295608,
+    "well_served_loss": 0,
+    "well_served_loss_pct": 0.0,
+    "underserved_increase": 0
+  },
+  "severity": {
+    "severe_estates_count": 16,
+    "severe_estates_population": 31590,
+    "high_estates_count": 10,
+    "high_estates_population": 19980,
+    "max_openness_penalty_m": 222.0857904949406
+  }
+}

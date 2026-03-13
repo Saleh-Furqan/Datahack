@@ -39,6 +39,10 @@ wheels/
 *.shx
 # Exception: keep small sample data if needed
 !data/samples/*.csv
+!data/processed/
+!data/processed/*.csv
+!data/processed/*.json
+!data/validation_report.json
 
 # IDEs
 .vscode/

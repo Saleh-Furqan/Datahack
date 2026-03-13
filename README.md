@@ -1,135 +1,86 @@
-# DataHack 2026: Hidden Inequality in Recycling Access
+# DataHack 2026 - Open-Access Gap in Hong Kong Recycling
 
-## Project Overview
+This repository contains our CUHK DataHack 2026 analysis of recycling accessibility in Hong Kong.
 
-This repository contains our team's submission for CUHK DataHack 2026, analyzing **Hong Kong's recycling infrastructure** through spatial data science.
+## Current Verified Finding (March 13, 2026)
 
-**Key Finding:** While Hong Kong's 8,858 recycling collection points provide excellent nominal coverage (median 27m), 40% are access-restricted (residents/staff only), creating hidden inequality for specific communities.
+- Total collection points analyzed: **8,858**
+- Public-access points: **5,301 (59.8%)**
+- Access-restricted points: **3,557 (40.2%)**
+- Median nearest distance to a point:
+  - All points: **27m**
+  - Public-only points: **39m**
+  - Median penalty: **+12m**
+- Estates with severe openness penalty (>=80m): **16 estates**
+- Population proxy in severe-penalty estates: **31,590 residents**
 
-## UN Sustainable Development Goals
-
-- **SDG 11**: Sustainable Cities and Communities
-- **SDG 12**: Responsible Consumption and Production
-
-## Our Discovery
-
-### The Open-Access Gap
-
-**Two-Scenario Analysis:**
-1. **All Points (8,858):** Median distance 27m - appears world-class
-2. **Public-Access Only (5,301):** Median distance 39m - still excellent
-3. **System-wide penalty:** +12m (modest)
-
-**BUT:** 15 specific estates face severe "Openness Penalties" of 80-220 meters when restricted points are excluded, revealing hidden inequality within nominal coverage.
-
-### Our Solution
-
-Targeted placement of 10-15 public micro-hubs for high-penalty estates to eliminate accessibility inequality at estimated cost of $50-150K.
-
-## Repository Structure
-
-```
-datahack/
-├── data/
-│   ├── raw/            # Downloaded datasets
-│   └── processed/      # Analysis outputs
-├── visualizations/     # Charts, maps, and figures
-├── docs/               # Strategy and documentation
-├── scripts/            # Data download & validation
-└── run_public_access_analysis.py  # Main analysis script
-```
-
-## Datasets Used
-
-- **Recyclable Collection Points Data** (8,858 points)
-  - Includes `accessibilty_notes` field (public vs restricted)
-  - 5,301 public-access, 3,557 restricted
-- **Public Housing Estates** (241 estates)
-  - ~2.2 million residents (29% of HK population)
-  - Full coordinates and population data
-
-## Evaluation Criteria
-
-Our project addresses:
-
-1. **Innovation & Originality (20%)** - Discovered public vs restricted access distinction
-2. **Impact & Practical Feasibility (30%)** - Targeted, cost-effective solution for inequality
-3. **Analytical Rigor & Data Competency (30%)** - Two-scenario comparison, openness penalty metric
-4. **Presentation & Collaboration (20%)** - Honest, nuanced storytelling
-
-## Team Members
-
-- Saleh Furqan
-- Ibrahim Malik (vxibrahimmalikxv@gmail.com)
-
-## Getting Started
-
-### Setup
+## Quick Start (Teammates)
 
 ```bash
-# Clone the repository
 git clone https://github.com/Saleh-Furqan/Datahack.git
 cd Datahack
 
-# Activate virtual environment
+python3 -m venv venv
 source venv/bin/activate
+pip install -r requirements.txt
+```
 
-# Run the analysis
+### 1) Download required raw datasets
+
+Run:
+
+```bash
+python3 scripts/download_data.py
+```
+
+Then manually download and place these files in `data/raw/`:
+
+- `collection_points.csv`
+- `public_housing.json`
+
+### 2) Validate data
+
+```bash
+python3 scripts/validate_data.py
+```
+
+### 3) Run analysis
+
+```bash
 python3 run_public_access_analysis.py
 ```
 
-### View Results
+## Outputs
 
-- **Visualizations:** `visualizations/open_access_gap.png`
-- **Interactive Map:** `visualizations/access_gap_map.html`
-- **Data:** `data/processed/estates_access_gap.csv`
-- **Stats:** `data/processed/access_gap_stats.json`
+After running analysis:
 
-### Key Files
+- `data/processed/estates_access_gap.csv`
+- `data/processed/access_gap_stats.json`
+- `visualizations/open_access_gap.png`
+- `visualizations/access_gap_map.html`
 
-- **[FINAL_STRATEGY.md](FINAL_STRATEGY.md)** - Complete project overview and rationale
-- **[STATUS.md](STATUS.md)** - Current progress and next steps
-- **`run_public_access_analysis.py`** - Main two-scenario analysis script
+## Repository Layout
 
-## Progress Tracker
+```text
+data/
+  raw/                  # Local downloaded datasets (not committed)
+  processed/            # Committed analysis outputs
+scripts/
+  download_data.py
+  validate_data.py
+run_public_access_analysis.py
+visualizations/
+docs/
+```
 
-- [x] Data collection and preprocessing
-- [x] Exploratory data analysis
-- [x] Two-scenario spatial analysis (all vs public-only)
-- [x] Openness Penalty calculation for all estates
-- [x] High-penalty estate identification (top 15)
-- [x] Visualization development
-- [ ] Targeted hub placement for high-penalty estates
-- [ ] Final presentation preparation
+## Team Workflow
 
-## Key Results
+```bash
+git checkout -b <feature-name>
+# make changes
+git add .
+git commit -m "Describe change"
+git push -u origin <feature-name>
+```
 
-### The Numbers
-
-- **40.2%** of collection points are access-restricted
-- **+12m** median penalty system-wide (modest)
-- **15 estates** with severe penalties (80-222m)
-- **~50,000 residents** affected by severe inequality
-- **10-15 hubs** needed to eliminate penalties
-
-### Top 5 High-Penalty Estates
-
-1. Hing Tin Estate: +222m penalty (17m → 239m)
-2. Wah Kwai Estate: +185m penalty (2m → 187m)
-3. Fung Wah Estate: +165m penalty (75m → 240m)
-4. Kwai Hing Estate: +138m penalty (5m → 143m)
-5. Yung Shing Court: +131m penalty (38m → 169m)
-
-## Resources
-
-- [Competition Details](https://libguides.lib.cuhk.edu.hk/datahack/2026-data)
-- [Evaluation Criteria](https://libguides.lib.cuhk.edu.hk/datahack)
-- [DATA.GOV.HK](https://data.gov.hk/en/)
-
-## License
-
-MIT License - Educational Use
-
----
-
-**Last Updated**: March 13, 2026
+Then open a PR to `main` so everyone can review.
