@@ -178,7 +178,7 @@ Work through notebooks in order:
 
 Practice this:
 
-> "2.3 million Hong Kong residents live more than 500 meters from a recycling station, creating a significant barrier to participation. We analyzed government data to identify exactly where these gaps exist and used a max-coverage algorithm to place 25 new micro-hubs that would serve 1.6 million underserved residents. Our solution improves accessibility by 71% at an estimated cost of $250K, making it both impactful and practical. Here's the map."
+> "[X]% of Hong Kong residents live more than 500 meters from a recycling point, creating a significant barrier to participation. We analyzed government data to identify where these gaps exist and used a max-coverage algorithm to place 25 new micro-hubs that maximize newly served residents. Our solution improves <300m coverage by [Y] percentage points at an estimated cost range of [C]-[D]. Here's the map."
 
 [Show before/after split-screen map]
 

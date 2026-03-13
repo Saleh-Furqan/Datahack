@@ -230,7 +230,7 @@ while hubs_placed < target_count:
 **3. Distance Reduction**
 - **Median distance** to nearest facility (before vs after)
 - **Mean distance** to nearest facility (before vs after)
-- Example: "Median distance reduced from 620m to 280m"
+- Example template: "Median distance reduced from [baseline]m to [after]m"
 
 ### Secondary Metrics (If Time Permits)
 
@@ -289,10 +289,10 @@ while hubs_placed < target_count:
 
 **2. Impact Dashboard (Single Slide)**
 - 3-4 big numbers with icons:
-  - "2.1M residents currently underserved (>500m)"
-  - "1.5M residents newly served (25 hubs)"
-  - "71% improvement in <300m coverage"
-  - "Median distance: 620m → 280m"
+  - "[X] residents currently underserved (>500m)"
+  - "[Y] residents newly served (25 hubs)"
+  - "[Z]% improvement in <300m coverage"
+  - "Median distance: [A]m -> [B]m"
 - **Tool:** PowerPoint/Canva with clean design
 
 **3. Diminishing Returns Curve**
@@ -328,8 +328,8 @@ while hubs_placed < target_count:
 
 **7. One Neighborhood Deep-Dive**
 - Zoom into one example estate
-- Before: "800m walk to Lok Fu Recycling Station"
-- After: "New hub 150m away at [Estate Name]"
+- Before: "[A]m walk to nearest recycling point"
+- After: "New hub [B]m away at [Estate Name]"
 - Use actual estate photo if possible
 
 ---
@@ -345,7 +345,7 @@ while hubs_placed < target_count:
 **Slide 2: Problem Statement**
 - One shocking statistic (computed, not guessed)
 - Visual: Map showing coverage gaps
-- Hook: "Over 2 million Hong Kong residents face significant barriers to recycling"
+- Hook template: "[X]% of residents face significant distance barriers to recycling"
 
 **Slide 3: Our Approach**
 - "Analyzed 5 government datasets covering all recycling points and housing"
@@ -367,7 +367,7 @@ while hubs_placed < target_count:
 **Slide 6: Two Scenarios**
 - Diminishing returns curve
 - Scenario A (15 hubs) vs Scenario B (25 hubs)
-- "First 15 hubs serve 60% of impact at 55% of cost"
+- Key tradeoff statement computed from your results
 
 **Slide 7: Impact - Before/After**
 - Split-screen map
@@ -389,11 +389,8 @@ while hubs_placed < target_count:
   - "Partner with Housing Authority for estate lobbies"
   - "Pilot 5 hubs in Sham Shui Po (highest impact district)"
 - Scalability: "Method applicable to any dense Asian city"
-- Cost estimate: $200-300K for 25 hubs
-
-**Slide 11: Conclusion**
-- Summary of impact
-- Call to action: "Let's close the recycling gap"
+- Cost estimate range from sourced benchmark assumptions
+- Conclusion + call to action: "Here's where to place hubs first and how much access improves"
 
 ### Presentation Delivery (8-10 minutes)
 

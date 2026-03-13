@@ -114,7 +114,7 @@ Prove that millions of Hong Kong residents are blocked from recycling by distanc
 2. **Distance validation** - Hong Kong coordinate bounds checking
 3. **Data quality** - Documented assumptions and limitations
 4. **Reproducible** - All code on GitHub, requirements.txt provided
-5. **Ranges not points** - "1.4-1.7M residents" vs "1.6M" (shows honesty)
+5. **Ranges not points** - Use plausible ranges instead of false precision (shows honesty)
 
 ---
 
@@ -249,7 +249,7 @@ Prove that millions of Hong Kong residents are blocked from recycling by distanc
 
 ## The 30-Second Pitch (Practice This)
 
-> "Over 2 million Hong Kong residents live more than 500 meters from a recycling station, creating a significant barrier to participation. We analyzed five government datasets to identify exactly where these gaps exist, then used an optimization algorithm to place 25 new micro-hubs that would serve 1.6 million underserved residents. Our solution improves accessibility by 71% at an estimated cost of $250,000—making it both high-impact and practical. Here's the map."
+> "[X]% of Hong Kong residents live more than 500 meters from a recycling point, creating a significant barrier to participation. We analyzed government datasets to identify where these gaps exist, then used an optimization algorithm to place 25 new micro-hubs that maximize newly served residents. Our solution improves <300m coverage by [Y] percentage points at an estimated cost range of [C]-[D], making it both high-impact and practical. Here's the map."
 
 **[Show before/after split-screen map]**
 

@@ -95,7 +95,7 @@ Forget the elaborate 4-week plan. Here's what will actually win in a 48-hour hac
    - Simple bar charts
 
 3. **Top 10 Priority Locations**
-   - Table/map showing exact addresses for new hubs
+   - Table/map showing nearest landmarks or estates for new hubs
    - Population served by each
    - Cost estimate (rough)
 
@@ -131,12 +131,12 @@ Forget the elaborate 4-week plan. Here's what will actually win in a 48-hour hac
 
 5. **Our Solution (2 slides)**
    - Map showing proposed 25 micro-hubs
-   - Table of top 10 priority locations with addresses
+   - Table of top 10 priority locations with landmarks/estates
 
 6. **Impact (2 slides)**
    - Before/After comparison
-   - Big numbers: population served, tons diverted, coverage %
-   - Cost estimate and ROI
+   - Big numbers: population served, coverage %, median distance change
+   - Optional (if sourced): waste diversion range and cost estimate
 
 7. **Implementation (1 slide)**
    - "Quick Wins": 3-5 specific actionable recommendations
@@ -211,8 +211,8 @@ Forget the elaborate 4-week plan. Here's what will actually win in a 48-hour hac
 
 ### Must-Haves:
 1. One clear, defensible finding (the 500m problem)
-2. Specific, actionable recommendations (20-30 hub locations with addresses)
-3. Quantified impact (population served, tons diverted)
+2. Specific, actionable recommendations (20-30 hub locations with landmarks/estates)
+3. Quantified impact (population served, coverage %, distance reduction)
 4. Beautiful main map (before/after)
 5. Clean, practiced presentation delivery
 
@@ -273,7 +273,6 @@ datahack/
 
 ## The Winning Pitch (30-Second Version)
 
-> "2.3 million Hong Kong residents live more than 500 meters from a recycling station. Using government data, we identified exactly where they are and where to place 25 new micro-hubs to serve 1.6 million of them. This would divert an estimated 8,500 tons per year from landfills at a cost of just $200K. Here's the map."
 > "[X]% of Hong Kong residents live more than 500 meters from a recycling point. Using government data, we identified where those gaps are and where to place 25 new micro-hubs to maximize newly served residents. This improves <300m coverage by [Y] percentage points at an estimated cost range of [C]-[D]. Here's the map."
 
 **Then show the before/after map. That's your mic drop moment.**

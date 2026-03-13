@@ -4,9 +4,7 @@ Data validation script for DataHack 2026
 Checks that downloaded datasets are ready for analysis
 """
 
-import os
 import pandas as pd
-import geopandas as gpd
 from pathlib import Path
 import json
 import re
