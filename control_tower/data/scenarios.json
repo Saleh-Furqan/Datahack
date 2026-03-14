@@ -1,0 +1,151 @@
+{
+  "scenarios": {
+    "baseline": {
+      "name": "Baseline (Current State)",
+      "description": "No intervention - current infrastructure only",
+      "interventions": {
+        "new_hubs": 0,
+        "mobile_trucks": 0,
+        "retrofits": 0,
+        "incentive_districts": 0
+      },
+      "costs": {
+        "capex_hkd": 0,
+        "annual_opex_hkd": 0
+      },
+      "assumptions": {
+        "note": "Baseline represents current state from data analysis"
+      },
+      "modeling": {
+        "distance_gain_factor": 0.0,
+        "vulnerability_weight": 0.0,
+        "targeted_estates": 0,
+        "targeted_boost_m": 0.0,
+        "diversion_relative_low": 0.0,
+        "diversion_relative_high": 0.0
+      }
+    },
+    "static_hubs": {
+      "name": "Static Hubs (Infrastructure-First)",
+      "description": "10 fixed multi-stream hubs at optimal locations",
+      "interventions": {
+        "new_hubs": 10,
+        "mobile_trucks": 0,
+        "retrofits": 0,
+        "incentive_districts": 0
+      },
+      "costs": {
+        "capex_hkd": 50000000,
+        "annual_opex_hkd": 2000000,
+        "cost_per_hub_hkd": 5000000,
+        "annual_maintenance_per_hub_hkd": 200000
+      },
+      "assumptions": {
+        "hub_locations": "From optimized_hubs.csv (greedy max-coverage)",
+        "hub_service_radius_m": 800,
+        "diversion_per_hub_tpd_low": 0.8,
+        "diversion_per_hub_tpd_high": 1.5,
+        "uncertainty": "±40%"
+      },
+      "modeling": {
+        "distance_gain_factor": 1.0,
+        "vulnerability_weight": 0.0,
+        "targeted_estates": 0,
+        "targeted_boost_m": 0.0,
+        "diversion_relative_low": 1.0,
+        "diversion_relative_high": 1.0
+      }
+    },
+    "mobile_first": {
+      "name": "Mobile-First (Flexible Operations)",
+      "description": "3 mobile trucks on rotating schedule + 15 retrofits at existing points",
+      "interventions": {
+        "new_hubs": 0,
+        "mobile_trucks": 3,
+        "retrofits": 15,
+        "incentive_districts": 0
+      },
+      "costs": {
+        "capex_hkd": 15000000,
+        "annual_opex_hkd": 4500000,
+        "truck_purchase_hkd": 2000000,
+        "retrofit_cost_per_point_hkd": 10000,
+        "annual_truck_operations_hkd": 1500000
+      },
+      "assumptions": {
+        "truck_schedule": "2-week rotation through 20 high-lockout estates",
+        "retrofit_points": "Existing public points in textile-underserved zones",
+        "diversion_per_truck_tpd_low": 1.2,
+        "diversion_per_truck_tpd_high": 2.0,
+        "diversion_per_retrofit_tpd_low": 0.3,
+        "diversion_per_retrofit_tpd_high": 0.6,
+        "uncertainty": "±40%"
+      },
+      "modeling": {
+        "distance_gain_factor": 0.34,
+        "vulnerability_weight": 0.25,
+        "focus_population_weight": 0.35,
+        "targeted_estates": 35,
+        "targeted_boost_m": 55,
+        "diversion_relative_low": 0.72,
+        "diversion_relative_high": 0.9
+      }
+    },
+    "hybrid_equity": {
+      "name": "Hybrid Equity (Balanced Approach)",
+      "description": "5 fixed hubs + 2 mobile trucks + 15 retrofits, prioritizing worst-served districts",
+      "interventions": {
+        "new_hubs": 5,
+        "mobile_trucks": 2,
+        "retrofits": 15,
+        "incentive_districts": 3
+      },
+      "costs": {
+        "capex_hkd": 35000000,
+        "annual_opex_hkd": 4250000,
+        "hub_capex_hkd": 25000000,
+        "truck_capex_hkd": 4000000,
+        "retrofit_capex_hkd": 150000,
+        "incentive_budget_annual_hkd": 1000000,
+        "operations_annual_hkd": 3250000
+      },
+      "assumptions": {
+        "hub_selection": "Top 5 from greedy algorithm",
+        "truck_routes": "Cover estates not served by fixed hubs",
+        "retrofit_targeting": "High-lockout zones without new infrastructure",
+        "incentive_mechanism": "HK$3-5/kg for 3 pilot districts",
+        "equity_weight": 0.7,
+        "impact_weight": 0.3,
+        "uncertainty": "±40%"
+      },
+      "modeling": {
+        "distance_gain_factor": 0.48,
+        "vulnerability_weight": 0.32,
+        "focus_population_weight": 0.25,
+        "targeted_estates": 42,
+        "targeted_boost_m": 75,
+        "diversion_relative_low": 0.9,
+        "diversion_relative_high": 1.0
+      }
+    }
+  },
+  "metrics_framework": {
+    "primary_metrics": [
+      "estates_over_500m",
+      "textile_burden_pct",
+      "annual_diversion_tonnes",
+      "total_cost_hkd",
+      "payback_years"
+    ],
+    "equity_metrics": [
+      "district_gini_coefficient",
+      "worst_quartile_improvement_pct",
+      "beneficiary_estate_count"
+    ],
+    "validation_metrics": {
+      "pilot_estates": 5,
+      "measurement_weeks": 12,
+      "success_threshold_pct": 70
+    }
+  }
+}

@@ -1,272 +1,343 @@
 #!/usr/bin/env python3
 """
-Precompute all scenario outcomes for Green Loop Control Tower.
-This runs offline to generate metrics for each intervention strategy.
+Precompute scenario outputs for the Green Loop Control Tower.
+
+This script intentionally separates:
+- Measured outputs (from run_analysis.py artifacts)
+- Modeled scenario estimates (explicitly assumption-driven)
 """
 
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
+from typing import Any, Dict, Tuple
 
 import numpy as np
 import pandas as pd
 
-# Add parent to path for imports
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
-# Paths
 ROOT = Path(__file__).parent.parent
 DATA = ROOT / "data" / "processed"
 CONTROL_TOWER = ROOT / "control_tower"
-OUTPUT = CONTROL_TOWER / "scenario_outputs.json"
+CONTROL_TOWER_DATA = CONTROL_TOWER / "data"
+CONFIG_PATH = CONTROL_TOWER_DATA / "scenarios.json"
+OUTPUT_PATH = CONTROL_TOWER_DATA / "scenario_outputs.json"
 
-CONTROL_TOWER.mkdir(exist_ok=True)
-
-
-def load_baseline_data():
-    """Load verified baseline metrics from analysis pipeline."""
-    with open(DATA / "baseline_metrics.json") as f:
-        baseline = json.load(f)
-
-    with open(DATA / "impact_report.json") as f:
-        impact = json.load(f)
-
-    with open(DATA / "optimized_hubs.csv") as f:
-        hubs = pd.read_csv(f)
-
-    with open(DATA / "estates_full_analysis.csv") as f:
-        estates = pd.read_csv(f)
-
-    return baseline, impact, hubs, estates
+CONTROL_TOWER_DATA.mkdir(exist_ok=True)
 
 
-def compute_scenario_baseline(baseline, estates):
-    """Baseline scenario: current state."""
-    textiles = baseline["streams"]["textiles"]
+def _read_json(path: Path) -> Dict[str, Any]:
+    with path.open() as f:
+        return json.load(f)
 
+
+def _compute_gini(values: np.ndarray) -> float:
+    arr = np.asarray(values, dtype=float)
+    arr = arr[np.isfinite(arr)]
+    if arr.size == 0:
+        return 0.0
+    if np.min(arr) < 0:
+        arr = arr - np.min(arr)
+    total = np.sum(arr)
+    if np.isclose(total, 0):
+        return 0.0
+    arr = np.sort(arr)
+    n = arr.size
+    idx = np.arange(1, n + 1)
+    gini = (2.0 * np.sum(idx * arr)) / (n * total) - (n + 1) / n
+    return float(gini)
+
+
+def _district_median_gini(estates: pd.DataFrame, distances: np.ndarray) -> float:
+    tmp = estates[["district"]].copy()
+    tmp["dist"] = distances
+    med = tmp.groupby("district", as_index=False).agg(median_dist=("dist", "median"))
+    return _compute_gini(med["median_dist"].to_numpy(dtype=float))
+
+
+def _summarize_access(
+    distances: np.ndarray,
+    populations: np.ndarray,
+    threshold_m: int,
+    total_population: int,
+) -> Dict[str, Any]:
+    over = distances > threshold_m
+    estates_over = int(np.sum(over))
+    pop_over = int(np.sum(populations[over]))
+    burden_pct = (pop_over / max(total_population, 1)) * 100.0
     return {
-        "estates_over_500m": textiles["estates_over_500m"],
-        "population_over_500m": textiles["population_over_500m"],
-        "textile_burden_pct": baseline["fairness_metric"]["value_pct"],
-        "median_distance_m": textiles["median_estate_distance_m"],
-        "annual_diversion_tonnes": 0,  # No intervention
-        "total_cost_hkd": 0,
-        "capex_hkd": 0,
-        "annual_opex_hkd": 0,
-        "payback_years": None,
-        "district_gini": 0.48,  # From baseline analysis
-        "beneficiary_estates": [],
-        "notes": "Current state from verified data"
+        "estates_over_500m": estates_over,
+        "population_over_500m": pop_over,
+        "textile_burden_pct": round(float(burden_pct), 2),
+        "median_distance_m": round(float(np.median(distances)), 1),
     }
 
 
-def compute_scenario_static_hubs(baseline, impact, hubs, estates):
-    """Static hubs scenario: 10 fixed locations."""
-    textiles_impact = impact["impact"]["textiles"]
-    diversion = impact["diversion_model"]
-
-    # Compute Gini coefficient (simplified - uses district variance)
-    estate_distances = estates["dist_textiles"].values
-    gini = compute_gini(estate_distances)
-
-    # Identify beneficiary estates (those that improved)
-    baseline_over500 = baseline["streams"]["textiles"]["estates_over_500m"]
-    after_over500 = textiles_impact["after_estates_over_500m"]
-
-    return {
-        "estates_over_500m": after_over500,
-        "population_over_500m": textiles_impact["after_population_over_500m"],
-        "textile_burden_pct": (textiles_impact["after_population_over_500m"] / 2262060) * 100,
-        "median_distance_m": textiles_impact["median_distance_after_m"],
-        "annual_diversion_tonnes": diversion["additional_diversion_annual_tonnes_high"],
-        "total_cost_hkd": 50000000 + (2000000 * 5),  # Capex + 5yr opex
-        "capex_hkd": 50000000,
-        "annual_opex_hkd": 2000000,
-        "payback_years": diversion["payback_years_worst_case"],
-        "district_gini": gini * 0.95,  # Modest improvement
-        "beneficiary_estates": int(baseline_over500 - after_over500),
-        "notes": "From optimized_hubs.csv analysis"
-    }
-
-
-def compute_scenario_mobile_first(baseline, estates):
-    """Mobile-first scenario: 3 trucks + 15 retrofits."""
-    textiles = baseline["streams"]["textiles"]
-
-    # Model: trucks cover 20 estates on rotation
-    # Each truck serves ~7 estates effectively
-    # Retrofit adds capacity at 15 existing points
-
-    # Estimate improvement: 40% of static hubs (more flexible, less permanent)
-    improvement_factor = 0.4
-    baseline_over500 = textiles["estates_over_500m"]
-    reduction = int(23 * improvement_factor)  # 23 from static hubs
-
-    # Diversion calculation
-    # 3 trucks * 1.6 tpd avg + 15 retrofits * 0.45 tpd avg
-    diversion_tpd_low = (3 * 1.2) + (15 * 0.3)
-    diversion_tpd_high = (3 * 2.0) + (15 * 0.6)
-    diversion_annual_low = int(diversion_tpd_low * 365)
-    diversion_annual_high = int(diversion_tpd_high * 365)
-
-    # Cost
-    capex = 15000000
-    opex = 4500000
-    total_cost_5yr = capex + (opex * 5)
-
-    # Payback
-    gate_fee_savings_low = diversion_annual_low * 365
-    gate_fee_savings_high = diversion_annual_high * 365
-    payback_low = capex / gate_fee_savings_high
-    payback_high = total_cost_5yr / gate_fee_savings_low
-
-    return {
-        "estates_over_500m": baseline_over500 - reduction,
-        "population_over_500m": int(textiles["population_over_500m"] * (1 - improvement_factor)),
-        "textile_burden_pct": textiles["population_over_500m"] * (1 - improvement_factor) / 2262060 * 100,
-        "median_distance_m": textiles["median_estate_distance_m"] * 0.92,  # 8% improvement
-        "annual_diversion_tonnes": diversion_annual_high,
-        "annual_diversion_tonnes_range": [diversion_annual_low, diversion_annual_high],
-        "total_cost_hkd": total_cost_5yr,
-        "capex_hkd": capex,
-        "annual_opex_hkd": opex,
-        "payback_years": round((payback_low + payback_high) / 2, 1),
-        "payback_years_range": [round(payback_low, 1), round(payback_high, 1)],
-        "district_gini": 0.43,  # Better than static (more distributed)
-        "beneficiary_estates": reduction,
-        "notes": "MODELED estimate - requires validation. Lower capex, higher flexibility."
-    }
+def _top_beneficiaries(
+    estates: pd.DataFrame,
+    baseline_dist: np.ndarray,
+    scenario_dist: np.ndarray,
+    n: int = 12,
+) -> list[Dict[str, Any]]:
+    tmp = estates[["estate", "district", "population"]].copy()
+    tmp["before_m"] = baseline_dist
+    tmp["after_m"] = scenario_dist
+    tmp["reduction_m"] = np.maximum(tmp["before_m"] - tmp["after_m"], 0.0)
+    tmp["newly_served"] = (tmp["before_m"] > 500) & (tmp["after_m"] <= 500)
+    top = tmp.sort_values("reduction_m", ascending=False).head(n)
+    records = []
+    for _, row in top.iterrows():
+        records.append(
+            {
+                "estate": str(row["estate"]),
+                "district": str(row["district"]),
+                "population": int(row["population"]),
+                "before_m": round(float(row["before_m"]), 1),
+                "after_m": round(float(row["after_m"]), 1),
+                "reduction_m": round(float(row["reduction_m"]), 1),
+                "newly_served": bool(row["newly_served"]),
+            }
+        )
+    return records
 
 
-def compute_scenario_hybrid_equity(baseline, impact, estates):
-    """Hybrid equity scenario: 5 hubs + 2 trucks + 15 retrofits."""
-    textiles = baseline["streams"]["textiles"]
-    textiles_impact = impact["impact"]["textiles"]
-
-    # Model: combines 50% of static hubs + 67% of mobile capacity
-    # Plus equity weighting favors worst-served districts
-
-    # Estates improvement
-    static_improvement = 23  # From static hubs
-    mobile_improvement = 14  # From mobile-first (estimated)
-    # Hybrid gets: 50% of static + 40% of mobile (some overlap)
-    hybrid_improvement = int(static_improvement * 0.5 + mobile_improvement * 0.4)
-
-    baseline_over500 = textiles["estates_over_500m"]
-    after_over500 = baseline_over500 - hybrid_improvement
-
-    # Diversion: 5 hubs * 1.15 tpd + 2 trucks * 1.6 tpd + 15 retrofits * 0.45 tpd
-    diversion_tpd_low = (5 * 0.8) + (2 * 1.2) + (15 * 0.3)
-    diversion_tpd_high = (5 * 1.5) + (2 * 2.0) + (15 * 0.6)
-    diversion_annual_low = int(diversion_tpd_low * 365)
-    diversion_annual_high = int(diversion_tpd_high * 365)
-
-    # Cost
-    capex = 35000000
-    opex = 4250000
-    total_cost_5yr = capex + (opex * 5)
-
-    # Payback
-    gate_fee_savings_low = diversion_annual_low * 365
-    gate_fee_savings_high = diversion_annual_high * 365
-    payback_low = capex / gate_fee_savings_high
-    payback_high = total_cost_5yr / gate_fee_savings_low
-
-    # Equity: better Gini due to distributed interventions + equity weighting
-    gini = 0.40  # Best of all scenarios
-
-    # Population saved
-    pop_saved_ratio = hybrid_improvement / static_improvement
-    pop_saved = int(textiles_impact["population_saved"] * pop_saved_ratio)
-    pop_over500_after = textiles["population_over_500m"] - pop_saved
-
-    return {
-        "estates_over_500m": after_over500,
-        "population_over_500m": pop_over500_after,
-        "textile_burden_pct": round(pop_over500_after / 2262060 * 100, 2),
-        "median_distance_m": round(textiles["median_estate_distance_m"] * 0.87, 1),  # 13% improvement
-        "annual_diversion_tonnes": diversion_annual_high,
-        "annual_diversion_tonnes_range": [diversion_annual_low, diversion_annual_high],
-        "total_cost_hkd": total_cost_5yr,
-        "capex_hkd": capex,
-        "annual_opex_hkd": opex,
-        "payback_years": round((payback_low + payback_high) / 2, 1),
-        "payback_years_range": [round(payback_low, 1), round(payback_high, 1)],
-        "district_gini": gini,
-        "beneficiary_estates": hybrid_improvement,
-        "worst_quartile_improvement": 8,  # Estates in bottom 25% that improved
-        "notes": "MODELED estimate - combines infrastructure + flexibility + equity weighting"
-    }
+def _normalize(arr: np.ndarray) -> np.ndarray:
+    arr = np.asarray(arr, dtype=float)
+    if arr.size == 0:
+        return arr
+    vmin = np.min(arr)
+    vmax = np.max(arr)
+    if np.isclose(vmin, vmax):
+        return np.zeros_like(arr)
+    return (arr - vmin) / (vmax - vmin)
 
 
-def compute_gini(distances):
-    """Compute Gini coefficient for distance inequality."""
-    distances = np.sort(distances)
-    n = len(distances)
-    index = np.arange(1, n + 1)
-    return (2 * np.sum(index * distances)) / (n * np.sum(distances)) - (n + 1) / n
+def _modeled_distances(
+    estates: pd.DataFrame,
+    baseline_dist: np.ndarray,
+    static_dist: np.ndarray,
+    model_cfg: Dict[str, Any],
+) -> np.ndarray:
+    static_gain = np.maximum(baseline_dist - static_dist, 0.0)
+    vulnerability = estates.get("district_vulnerability", pd.Series(np.zeros(len(estates)))).to_numpy(dtype=float)
+    population = estates["population"].to_numpy(dtype=float)
+
+    vuln_norm = _normalize(vulnerability)
+    pop_norm = _normalize(population)
+
+    gain_factor = float(model_cfg.get("distance_gain_factor", 0.4))
+    vulnerability_weight = float(model_cfg.get("vulnerability_weight", 0.25))
+    focus_population_weight = float(model_cfg.get("focus_population_weight", 0.35))
+    targeted_estates = int(model_cfg.get("targeted_estates", 30))
+    targeted_boost_m = float(model_cfg.get("targeted_boost_m", 50))
+
+    gain = static_gain * gain_factor * (0.95 + vulnerability_weight * vuln_norm)
+
+    underserved_idx = np.where(baseline_dist > 500)[0]
+    if targeted_estates > 0 and underserved_idx.size > 0:
+        focus = focus_population_weight * pop_norm + (1.0 - focus_population_weight) * vuln_norm
+        ranked = underserved_idx[np.argsort(focus[underserved_idx])[::-1]]
+        chosen = ranked[: min(targeted_estates, ranked.size)]
+        gain[chosen] += targeted_boost_m
+
+    modeled = np.maximum(baseline_dist - gain, 0.0)
+    return modeled
 
 
-def main():
-    """Run all scenario computations."""
-    print("=" * 70)
+def _costs_and_payback(
+    capex_hkd: float,
+    annual_opex_hkd: float,
+    annual_diversion_low: int,
+    annual_diversion_high: int,
+    gate_fee_hkd_per_tonne: float,
+) -> Tuple[float, Tuple[float, float], Tuple[int, int]]:
+    total_cost = float(capex_hkd + annual_opex_hkd * 5.0)
+    savings_low = float(annual_diversion_low * gate_fee_hkd_per_tonne)
+    savings_high = float(annual_diversion_high * gate_fee_hkd_per_tonne)
+
+    if savings_low <= 0 or savings_high <= 0:
+        return total_cost, (0.0, 0.0), (0, 0)
+
+    payback_best = capex_hkd / savings_high
+    payback_worst = total_cost / savings_low
+    return total_cost, (round(payback_best, 2), round(payback_worst, 2)), (int(savings_low), int(savings_high))
+
+
+def main() -> None:
+    print("=" * 72)
     print("GREEN LOOP CONTROL TOWER - Scenario Precomputation")
-    print("=" * 70)
+    print("=" * 72)
 
-    # Load data
-    print("\nLoading baseline data...")
-    baseline, impact, hubs, estates = load_baseline_data()
+    baseline = _read_json(DATA / "baseline_metrics.json")
+    report = _read_json(DATA / "impact_report.json")
+    config = _read_json(CONFIG_PATH)
+    estates = pd.read_csv(DATA / "estates_full_analysis.csv")
+    hubs = pd.read_csv(DATA / "optimized_hubs.csv")
 
-    # Compute scenarios
-    print("\nComputing scenarios...")
+    textiles_baseline = baseline["streams"]["textiles"]
+    textiles_impact = report["impact"]["textiles"]
+    threshold = int(report["metadata"]["underserved_threshold_m"])
+    gate_fee = float(report["diversion_model"]["assumptions"]["landfill_gate_fee_hkd_per_tonne"])
+    total_population = int(baseline["fairness_metric"]["denominator_population"])
 
-    scenarios = {
-        "baseline": compute_scenario_baseline(baseline, estates),
-        "static_hubs": compute_scenario_static_hubs(baseline, impact, hubs, estates),
-        "mobile_first": compute_scenario_mobile_first(baseline, estates),
-        "hybrid_equity": compute_scenario_hybrid_equity(baseline, impact, estates)
-    }
+    baseline_dist = estates["dist_textiles"].to_numpy(dtype=float)
+    static_dist = estates["dist_textiles_after"].to_numpy(dtype=float)
+    populations = estates["population"].to_numpy(dtype=float)
 
-    # Add metadata
+    baseline_gini = _district_median_gini(estates, baseline_dist)
+    static_gini = _district_median_gini(estates, static_dist)
+
+    static_low, static_high = report["cost_summary"]["additional_diversion_annual_tonnes_range"]
+
+    scenarios_out: Dict[str, Dict[str, Any]] = {}
+
+    for key, cfg in config["scenarios"].items():
+        costs = cfg.get("costs", {})
+        interventions = cfg.get("interventions", {})
+        capex = float(costs.get("capex_hkd", 0))
+        annual_opex = float(costs.get("annual_opex_hkd", 0))
+        model_cfg = cfg.get("modeling", {})
+
+        if key == "baseline":
+            access = _summarize_access(baseline_dist, populations, threshold, total_population)
+            annual_low = 0
+            annual_high = 0
+            annual_mid = 0
+            gini = baseline_gini
+            distances = baseline_dist
+            top_bens = []
+        elif key == "static_hubs":
+            # Measured from main optimization run.
+            access = {
+                "estates_over_500m": int(textiles_impact["after_estates_over_500m"]),
+                "population_over_500m": int(textiles_impact["after_population_over_500m"]),
+                "textile_burden_pct": round(float(textiles_impact["after_population_over_500m"] / total_population * 100), 2),
+                "median_distance_m": round(float(textiles_impact["median_distance_after_m"]), 1),
+            }
+            annual_low = int(static_low)
+            annual_high = int(static_high)
+            annual_mid = int(round((annual_low + annual_high) / 2))
+            gini = static_gini
+            distances = static_dist
+            top_bens = _top_beneficiaries(estates, baseline_dist, static_dist)
+        else:
+            # Explicitly modeled scenario.
+            distances = _modeled_distances(estates, baseline_dist, static_dist, model_cfg)
+            access = _summarize_access(distances, populations, threshold, total_population)
+
+            rel_low = float(model_cfg.get("diversion_relative_low", 0.7))
+            rel_high = float(model_cfg.get("diversion_relative_high", 0.95))
+            annual_low = int(round(static_low * rel_low))
+            annual_high = int(round(static_high * rel_high))
+            if annual_high < annual_low:
+                annual_low, annual_high = annual_high, annual_low
+            annual_mid = int(round((annual_low + annual_high) / 2))
+
+            gini = _district_median_gini(estates, distances)
+            top_bens = _top_beneficiaries(estates, baseline_dist, distances)
+
+        total_cost, payback_range, savings_range = _costs_and_payback(
+            capex_hkd=capex,
+            annual_opex_hkd=annual_opex,
+            annual_diversion_low=annual_low,
+            annual_diversion_high=annual_high,
+            gate_fee_hkd_per_tonne=gate_fee,
+        )
+
+        newly_served_mask = (baseline_dist > threshold) & (distances <= threshold)
+        worst_quartile_threshold = estates.get("district_vulnerability", pd.Series(np.zeros(len(estates)))).quantile(0.75)
+        worst_quartile_mask = estates.get("district_vulnerability", pd.Series(np.zeros(len(estates)))) >= worst_quartile_threshold
+
+        scenario_record = {
+            "name": cfg.get("name", key),
+            "description": cfg.get("description", ""),
+            "interventions": interventions,
+            "notes": cfg.get("assumptions", {}).get("note", ""),
+            "estates_over_500m": access["estates_over_500m"],
+            "population_over_500m": access["population_over_500m"],
+            "textile_burden_pct": access["textile_burden_pct"],
+            "median_distance_m": access["median_distance_m"],
+            "district_gini": round(float(gini), 3),
+            "beneficiary_estates": int(np.sum(newly_served_mask)),
+            "worst_quartile_improvement": int(np.sum(newly_served_mask & worst_quartile_mask.to_numpy())),
+            "annual_diversion_tonnes": annual_mid,
+            "annual_diversion_tonnes_range": [annual_low, annual_high],
+            "landfill_savings_hkd_per_year_range": [savings_range[0], savings_range[1]],
+            "capex_hkd": int(capex),
+            "annual_opex_hkd": int(annual_opex),
+            "total_cost_hkd": int(total_cost),
+            "payback_years": round(float(np.mean(payback_range)), 2) if annual_mid > 0 else None,
+            "payback_years_range": [payback_range[0], payback_range[1]] if annual_mid > 0 else [None, None],
+            "estate_distances_m": [round(float(x), 2) for x in distances.tolist()],
+            "top_beneficiaries": top_bens,
+        }
+        scenarios_out[key] = scenario_record
+
+    # Keep top hubs for map overlays.
+    map_hubs = []
+    for _, row in hubs.iterrows():
+        map_hubs.append(
+            {
+                "hub_rank": int(row["hub_rank"]),
+                "estate": str(row["estate"]),
+                "district": str(row["district"]),
+                "lat": float(row["lat"]),
+                "lon": float(row["lon"]),
+                "new_population_covered": int(row["new_population_covered"]),
+            }
+        )
+
     output = {
         "metadata": {
-            "generated_from": "verified analysis outputs",
+            "generated_on": pd.Timestamp.utcnow().isoformat(),
             "source_files": [
                 "data/processed/baseline_metrics.json",
                 "data/processed/impact_report.json",
                 "data/processed/optimized_hubs.csv",
-                "data/processed/estates_full_analysis.csv"
+                "data/processed/estates_full_analysis.csv",
+                "control_tower/data/scenarios.json",
             ],
-            "assumptions": "All intervention effects are MODELED estimates requiring validation",
-            "uncertainty": "±40% for all diversion and cost projections"
+            "primary_metric": "Textile Population Burden (>500m)",
+            "secondary_metric": "District median distance inequality (Gini)",
+            "units": {
+                "annual_diversion": "tonnes/year",
+                "diversion_range": "tonnes/year",
+                "distance": "meters",
+                "cost": "HKD",
+                "payback": "years",
+            },
+            "assumptions": "Baseline/static are measured from pipeline; other scenarios are modeled estimates.",
+            "uncertainty": "±40% modeled range; validate through pilot.",
         },
-        "scenarios": scenarios
+        "scenarios": scenarios_out,
+        "hubs": map_hubs,
     }
 
-    # Save
-    with open(OUTPUT, "w") as f:
+    with OUTPUT_PATH.open("w") as f:
         json.dump(output, f, indent=2)
 
-    print(f"\n✓ Saved scenario outputs to: {OUTPUT}")
-
-    # Print summary
-    print("\n" + "=" * 70)
+    print("\n✓ Saved scenario outputs to:", OUTPUT_PATH)
+    print("\n" + "=" * 72)
     print("SCENARIO SUMMARY")
-    print("=" * 70)
+    print("=" * 72)
+    for key, s in scenarios_out.items():
+        print(f"\n{key.upper()}:")
+        print(f"  Estates >500m: {s['estates_over_500m']}")
+        print(f"  Textile burden: {s['textile_burden_pct']:.1f}%")
+        print(
+            f"  Diversion: {s['annual_diversion_tonnes_range'][0]:,} - "
+            f"{s['annual_diversion_tonnes_range'][1]:,} tonnes/year"
+        )
+        print(f"  Cost (5y): HK${s['total_cost_hkd'] / 1e6:.1f}M")
+        if s["payback_years"] is not None:
+            print(
+                f"  Payback: {s['payback_years_range'][0]} - "
+                f"{s['payback_years_range'][1]} years"
+            )
+        print(f"  District inequality (Gini): {s['district_gini']:.3f}")
 
-    for scenario_name, metrics in scenarios.items():
-        print(f"\n{scenario_name.upper()}:")
-        print(f"  Estates >500m: {metrics['estates_over_500m']}")
-        print(f"  Textile Burden: {metrics['textile_burden_pct']:.1f}%")
-        print(f"  Diversion: {metrics.get('annual_diversion_tonnes', 0):,} tonnes/year")
-        print(f"  Cost: HK${metrics['total_cost_hkd'] / 1e6:.1f}M")
-        if metrics.get('payback_years'):
-            print(f"  Payback: {metrics['payback_years']} years")
-        print(f"  District Gini: {metrics['district_gini']:.2f}")
-
-    print("\n✓ Precomputation complete. Ready for dashboard.")
+    print("\n✓ Precomputation complete.")
 
 
 if __name__ == "__main__":

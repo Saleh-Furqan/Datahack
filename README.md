@@ -36,6 +36,17 @@ python3 scripts/validate_data.py
 python3 run_analysis.py
 ```
 
+## Control Tower Demo App
+
+```bash
+source venv/bin/activate
+python3 control_tower/precompute_scenarios.py
+streamlit run control_tower/app.py
+```
+
+Optional map enhancement:
+- add `control_tower/assets/hk_districts.geojson` for district boundary overlays.
+
 ## Output Files
 
 Data:
