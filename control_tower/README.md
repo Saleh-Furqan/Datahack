@@ -1,162 +1,73 @@
 # Green Loop Control Tower
 
-**Interactive optimization engine for Hong Kong's textile recycling network**
+Interactive Streamlit app for presenting the DataHack 2026 recycling analysis.
 
 ## Quick Start
 
 ```bash
-# From project root
+cd /home/saleh/datahack
 source venv/bin/activate
 pip install -r control_tower/requirements.txt
+python control_tower/precompute_scenarios.py
 streamlit run control_tower/Home.py
 ```
 
-Open http://localhost:8501
+## What This App Shows
 
-## What Is This?
-
-An interactive web app that:
-- **Shows** where to place recycling hubs using optimization algorithms
-- **Compares** policy scenarios with side-by-side maps
-- **Runs** live greedy max-coverage algorithm (industry standard)
-- **Analyzes** tradeoffs using Pareto frontier analysis
-
-**Not a static report—an interactive decision support tool.**
-
-## Key Features
-
-### Interactive Map
-- Click estates to see details
-- Filter by district & distance
-- Compare scenarios visually
-- View proposed hub locations
-- Optional district boundary overlay via `assets/hk_districts.geojson`
-
-### Optimization Engine - MAIN FEATURE
-- **Split-map comparison** (before/after side-by-side)
-- **Pareto frontier analysis** (multi-objective optimization)
-- **Live greedy algorithm** (run hub placement yourself)
-- **Radar charts** (multi-dimensional view)
-
-### Impact Analysis
-- Coverage distributions
-- District-level metrics
-- Top beneficiary estates
-- Cost-benefit analysis
-
-### Transparency
-- Full methodology documentation
-- Measured vs. modeled scenarios
-- 90-day validation protocol
-- Known limitations
-
-## App Structure
-
-```
-Home.py → Landing page
-
-4 Pages:
-├── 1. Interactive Map      - Visual exploration
-├── 2. Scenario Compare     - Optimization algorithms ⭐
-├── 3. Impact Analysis      - Detailed metrics
-└── 4. Assumptions          - Methodology
-```
-
-## Demo Flow (8 min)
-
-1. **Home** (1 min) - Show metrics
-2. **Interactive Map** (2 min) - Click estates, filter districts
-3. **Pareto Frontier** (2 min) - Explain multi-objective optimization
-4. **Live Algorithm** (4 min) - Run greedy max-coverage, show convergence
-
-**Showstopper:** Tab 3 in Scenario Compare - run the algorithm live!
-
-## Algorithms Used
-
-**Greedy Max-Coverage** (facility location)
-- Used by: Amazon warehouses, UPS hubs, cell towers
-- Guarantee: 63% of optimal (proven)
-- Complexity: O(n² × k)
-
-**Pareto Frontier Analysis** (multi-objective optimization)
-- Used by: Portfolio optimization, engineering design
-- Shows: Which scenarios represent true tradeoffs
+- Estate-level textile accessibility under four scenarios.
+- Proposed optimized hubs from the analysis pipeline.
+- Public stream collection layers (glass, textiles, hazardous, batteries, e-waste).
+- Scenario tradeoffs: burden, diversion range, cost, and district inequality.
+- Assumptions and 90-day validation protocol.
 
 ## Documentation
 
-**→ See [USER_GUIDE.md](USER_GUIDE.md) for complete documentation**
+- Full app walkthrough:
+  - `control_tower/APP_WALKTHROUGH.md`
+- Team runbook (setup, refresh, troubleshooting, pre-demo checks):
+  - `control_tower/TEAM_RUNBOOK.md`
+- Quick user guide / doc index:
+  - `control_tower/USER_GUIDE.md`
+- Deck-to-app consistency:
+  - `docs/SLIDE_ALIGNMENT_CHECKLIST.md`
 
-Includes:
-- Page-by-page walkthrough
-- Demo script (word-for-word)
-- Q&A responses
-- Technical details
-- Troubleshooting
+## Scope and Trust Model
 
-## What Makes This Innovative
+- `Baseline` and `Static Hubs` metrics are measured outputs from repository pipeline artifacts.
+- `Mobile-First` and `Hybrid Equity` are modeled scenarios with explicit uncertainty.
+- Private-building distance comparator is not yet available in this repo; fairness metrics currently use public-housing data.
 
-- **Transparency** - Show the algorithm, not just results
-- **Educational** - Users learn optimization while exploring
-- **Interactive** - Tune parameters, see immediate results
-- **Rigorous** - Industry-standard algorithms with proven guarantees
-- **Real-world** - Same methods used by Amazon, UPS, telecom
+## File Layout
 
-**Not just a hackathon demo—a production-grade tool.**
-
-## Files
-
-```
+```text
 control_tower/
-├── Home.py                       # Entry point
-├── pages/
-│   ├── 1_Interactive_Map.py      # Estate map
-│   ├── 2_Scenario_Compare.py     # Optimization (MAIN FEATURE)
-│   ├── 3_Impact_Analysis.py      # Metrics
-│   └── 4_Assumptions.py          # Methodology
+├── Home.py
+├── precompute_scenarios.py
+├── requirements.txt
 ├── backend/
-│   ├── scenario_engine.py        # Scenario helpers
-│   └── theme.py                  # Shared UI theme
+│   ├── data_loader.py
+│   ├── scenario_engine.py
+│   └── theme.py
 ├── data/
-│   ├── scenarios.json            # Configs
-│   └── scenario_outputs.json     # Results
-├── precompute_scenarios.py       # Offline computation
-├── requirements.txt              # Dependencies
-├── README.md                     # This file
-└── USER_GUIDE.md                 # Full documentation
+│   ├── scenarios.json
+│   └── scenario_outputs.json
+└── pages/
+    ├── 1_🗺️_Interactive_Map.py
+    ├── 2_📊_Scenario_Compare.py
+    ├── 3_📈_Impact_Analysis.py
+    └── 4_⚙️_Assumptions.py
 ```
 
-## Dependencies
+## Optional Enhancements
 
-- `streamlit` - Web framework
-- `pandas`, `numpy` - Data processing
-- `scipy` - Distance calculations
-- `plotly` - Interactive charts
-- `folium`, `streamlit-folium` - Maps
+- Add `control_tower/assets/hk_districts.geojson` for district boundary overlays.
+- Add `data/raw/recycling_stations.csv` (with lat/lon) to enable a dedicated station layer.
+- Add `data/raw/waste_management_facilities.csv` (with lat/lon) to enable facility layer overlays.
 
-## Troubleshooting
+## Presentation Tip
 
-**Map legend not visible?**
-Fixed in latest version (black text on semi-transparent background)
-
-**Map flickering?**
-Fixed with session state key
-
-**Missing scipy?**
-Run: `pip install scipy`
-
-## For Judges
-
-This tool demonstrates:
-- Technical rigor (proven algorithms)
-- Transparency (show the math)
-- Innovation (interactive optimization)
-- Real-world applicability (used by logistics companies)
-- Educational value (teach users optimization concepts)
-
-**Key differentiator:** We don't just recommend—we show HOW we optimize.
-
----
-
-**Green Loop: Where Policy Meets Optimization Science**
-
-Built for DataHack 2026 - The Green Loop Challenge
+Use this order in live demo:
+1. `Interactive Map` (show problem geography + hubs).
+2. `Impact Analysis` (numbers and beneficiaries).
+3. `Assumptions` (credibility and validation).
+4. `Scenario Compare` (policy tradeoff discussion if time permits).

@@ -8,15 +8,17 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
-import json
-from pathlib import Path
 
 try:
     from control_tower.backend.theme import apply_theme
+    from control_tower.backend.data_loader import load_estates, load_scenario_outputs
 except ModuleNotFoundError:
     import sys
+    from pathlib import Path
+
     sys.path.append(str(Path(__file__).resolve().parents[1]))
     from backend.theme import apply_theme
+    from backend.data_loader import load_estates, load_scenario_outputs
 
 # Page config
 st.set_page_config(
@@ -26,28 +28,25 @@ st.set_page_config(
 )
 apply_theme()
 
-# Paths
-ROOT = Path(__file__).parent.parent.parent
-DATA_DIR = ROOT / "data" / "processed"
-CT_DATA = Path(__file__).parent.parent / "data"
-
-# Load data
 @st.cache_data
-def load_scenario_data():
-    with open(CT_DATA / "scenario_outputs.json") as f:
-        return json.load(f)
+def get_inputs():
+    return load_scenario_outputs(), load_estates()
 
-@st.cache_data
-def load_estates():
-    return pd.read_csv(DATA_DIR / "estates_full_analysis.csv")
 
-data = load_scenario_data()
+data, estates = get_inputs()
 scenarios = data["scenarios"]
-estates = load_estates()
 
 # Header
-st.title("📈 Impact Analysis")
-st.markdown("**Detailed metrics and beneficiary analysis**")
+st.markdown(
+    """
+<div class="gl-hero">
+  <p class="gl-eyebrow">Measured + Modeled Outcomes</p>
+  <h2>Impact Analysis</h2>
+  <p>Detailed impact diagnostics for each scenario, including beneficiaries, costs, diversion ranges, and uncertainty.</p>
+</div>
+""",
+    unsafe_allow_html=True,
+)
 
 # Scenario selector
 scenario_options = {
@@ -91,11 +90,7 @@ with col2:
     )
 
 with col3:
-    st.metric(
-        "Diversion (t/y)",
-        f"{s['annual_diversion_tonnes']:,}",
-        delta=f"+{s['annual_diversion_tonnes']:,}"
-    )
+    st.metric("Diversion Range", f"{s['annual_diversion_tonnes_range'][0]:,}–{s['annual_diversion_tonnes_range'][1]:,} t/y")
 
 with col4:
     delta = s["district_gini"] - baseline["district_gini"]
@@ -335,7 +330,7 @@ with col2:
 
         st.metric(
             "Annual Landfill Savings",
-            f"HK${savings_range[0]:,} - ${savings_range[1]:,}",
+            f"HK${savings_range[0]:,} - HK${savings_range[1]:,}",
             help="Avoided landfill gate fees from diverted textiles"
         )
 
@@ -411,7 +406,8 @@ st.info(f"""
 **Summary for {scenario_options[selected_scenario]}:**
 
 This scenario reduces the textile burden from {baseline['textile_burden_pct']:.1f}% to {s['textile_burden_pct']:.1f}%,
-serving an additional {s['beneficiary_estates']} estates and diverting an estimated {s['annual_diversion_tonnes']:,} tonnes/year
+serving an additional {s['beneficiary_estates']} estates and diverting an estimated
+{s['annual_diversion_tonnes_range'][0]:,}–{s['annual_diversion_tonnes_range'][1]:,} tonnes/year
 from landfills at a total 5-year cost of HK${s['total_cost_hkd'] / 1e6:.1f}M.
 
 District inequality (Gini) improves from {baseline['district_gini']:.3f} to {s['district_gini']:.3f},

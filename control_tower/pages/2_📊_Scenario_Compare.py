@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 """
-Scenario Comparison - Dynamic optimization with split-map visualization
-Uses Pareto frontier analysis and real-time hub placement simulation
+Scenario Comparison - policy tradeoffs and optimization diagnostics.
 """
 
 import streamlit as st
@@ -11,16 +10,28 @@ import plotly.graph_objects as go
 import plotly.express as px
 import folium
 from streamlit_folium import st_folium
-from pathlib import Path
-import json
 from scipy.spatial.distance import cdist
 
 try:
     from control_tower.backend.theme import apply_theme
+    from control_tower.backend.data_loader import (
+        load_district_geojson,
+        load_estates,
+        load_hubs,
+        load_scenario_outputs,
+    )
 except ModuleNotFoundError:
     import sys
+    from pathlib import Path
+
     sys.path.append(str(Path(__file__).resolve().parents[1]))
     from backend.theme import apply_theme
+    from backend.data_loader import (
+        load_district_geojson,
+        load_estates,
+        load_hubs,
+        load_scenario_outputs,
+    )
 
 # Page config
 st.set_page_config(
@@ -30,56 +41,34 @@ st.set_page_config(
 )
 apply_theme()
 
-# Paths
-ROOT = Path(__file__).parent.parent.parent
-DATA_DIR = ROOT / "data" / "processed"
-CT_DATA = Path(__file__).parent.parent / "data"
-ASSETS_DIR = Path(__file__).parent.parent / "assets"
-
-# Load data
 @st.cache_data
-def load_scenario_data():
-    with open(CT_DATA / "scenario_outputs.json") as f:
-        return json.load(f)
-
-@st.cache_data
-def load_estates():
-    return pd.read_csv(DATA_DIR / "estates_full_analysis.csv")
-
-@st.cache_data
-def load_hubs():
-    return pd.read_csv(DATA_DIR / "optimized_hubs.csv")
+def get_inputs():
+    return (
+        load_scenario_outputs(),
+        load_estates(),
+        load_hubs(),
+        load_district_geojson(),
+    )
 
 
-@st.cache_data
-def load_district_geojson():
-    geo_path = ASSETS_DIR / "hk_districts.geojson"
-    if not geo_path.exists():
-        return None
-    with open(geo_path) as f:
-        return json.load(f)
-
-data = load_scenario_data()
+data, estates, hubs, district_geojson = get_inputs()
 scenarios = data["scenarios"]
-estates = load_estates()
-hubs = load_hubs()
-district_geojson = load_district_geojson()
 
 # Initialize session state
 if "pareto_computed" not in st.session_state:
     st.session_state.pareto_computed = False
 
 # Header
-st.title("📊 Scenario Comparison with Optimization Engine")
-st.markdown("**Dynamic policy optimization using Pareto frontier analysis and greedy max-coverage**")
+st.title("📊 Scenario Compare")
+st.markdown("**Policy tradeoffs across baseline, static hubs, mobile-first, and hybrid equity modes.**")
 
 st.markdown("---")
 
 # Tabs for different views
 tab1, tab2, tab3, tab4 = st.tabs([
     "🗺️ Split-Map Comparison",
-    "📈 Pareto Frontier Analysis",
-    "⚡ Live Hub Optimization",
+    "📈 Tradeoff Frontier",
+    "⚡ Greedy Placement Simulator",
     "📊 Metrics Dashboard"
 ])
 
@@ -214,7 +203,10 @@ with tab1:
 
         s_left = scenarios[scenario_left]
         st.metric("Burden %", f"{s_left['textile_burden_pct']:.1f}%")
-        st.metric("Diversion (t/y)", f"{s_left['annual_diversion_tonnes']:,}")
+        st.metric(
+            "Diversion Range (t/y)",
+            f"{s_left['annual_diversion_tonnes_range'][0]:,}-{s_left['annual_diversion_tonnes_range'][1]:,}",
+        )
 
     with col_right:
         map_right = create_scenario_map(scenario_right, scenario_options[scenario_right])
@@ -227,13 +219,18 @@ with tab1:
 
         s_right = scenarios[scenario_right]
         st.metric("Burden %", f"{s_right['textile_burden_pct']:.1f}%")
-        st.metric("Diversion (t/y)", f"{s_right['annual_diversion_tonnes']:,}")
+        st.metric(
+            "Diversion Range (t/y)",
+            f"{s_right['annual_diversion_tonnes_range'][0]:,}-{s_right['annual_diversion_tonnes_range'][1]:,}",
+        )
 
     # Comparison metrics
     st.markdown("### 📊 Comparison Summary")
 
     delta_burden = s_right['textile_burden_pct'] - s_left['textile_burden_pct']
-    delta_diversion = s_right['annual_diversion_tonnes'] - s_left['annual_diversion_tonnes']
+    left_mid = (s_left["annual_diversion_tonnes_range"][0] + s_left["annual_diversion_tonnes_range"][1]) / 2
+    right_mid = (s_right["annual_diversion_tonnes_range"][0] + s_right["annual_diversion_tonnes_range"][1]) / 2
+    delta_diversion = right_mid - left_mid
     delta_cost = s_right['total_cost_hkd'] - s_left['total_cost_hkd']
 
     col1, col2, col3, col4 = st.columns(4)
@@ -248,9 +245,9 @@ with tab1:
 
     with col2:
         st.metric(
-            "Diversion Difference",
-            f"{abs(delta_diversion):,} t/y",
-            delta=f"{delta_diversion:+,}",
+            "Diversion Difference (midpoint)",
+            f"{int(abs(delta_diversion)):,} t/y",
+            delta=f"{int(delta_diversion):+,}",
             delta_color="normal"
         )
 
@@ -275,7 +272,7 @@ with tab1:
 # TAB 2: PARETO FRONTIER ANALYSIS
 # ============================================================================
 with tab2:
-    st.subheader("📈 Pareto Frontier: Multi-Objective Optimization")
+    st.subheader("📈 Tradeoff Frontier")
 
     st.markdown("""
     **What is a Pareto Frontier?**
@@ -422,18 +419,15 @@ with tab2:
 
     st.plotly_chart(fig, width="stretch")
 
-    st.info("""
-    **Interpretation:**
-    - **Green diamonds**: Pareto-optimal scenarios (no other scenario strictly better on all objectives)
-    - **Pale circles**: Dominated scenarios (at least one other scenario is better on all objectives)
-    - **Frontier surface**: Connect Pareto points to visualize the tradeoff surface
-    """)
+    st.info(
+        "Green diamonds are non-dominated scenarios. Pale circles are dominated by at least one other option."
+    )
 
 # ============================================================================
 # TAB 3: LIVE HUB OPTIMIZATION
 # ============================================================================
 with tab3:
-    st.subheader("⚡ Live Greedy Max-Coverage Algorithm")
+    st.subheader("⚡ Greedy Placement Simulator")
 
     st.markdown("""
     **Algorithm: Greedy Max-Coverage Hub Placement**
@@ -694,14 +688,6 @@ with tab4:
     st.dataframe(df_all, width="stretch", hide_index=True)
 
 st.markdown("---")
-st.info("""
-**💡 Innovation Highlight:**
-
-This scenario comparison uses **real optimization algorithms** from operations research:
-- **Pareto frontier analysis** for multi-objective optimization
-- **Greedy max-coverage** for hub placement (proven 1-1/e approximation ratio)
-- **Dynamic visualization** of algorithm convergence
-- **Split-map comparison** for spatial insight
-
-These are industry-standard techniques used in logistics, urban planning, and facility location problems.
-""")
+st.info(
+    "Measured baseline/static outputs are shown alongside modeled mobile/hybrid scenarios to make policy tradeoffs explicit."
+)

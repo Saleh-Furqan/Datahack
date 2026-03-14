@@ -4,15 +4,16 @@ Assumptions & Methodology - Transparency and validation protocol
 """
 
 import streamlit as st
-import json
 from pathlib import Path
 
 try:
     from control_tower.backend.theme import apply_theme
+    from control_tower.backend.data_loader import load_baseline_metrics, load_scenario_outputs
 except ModuleNotFoundError:
     import sys
     sys.path.append(str(Path(__file__).resolve().parents[1]))
     from backend.theme import apply_theme
+    from backend.data_loader import load_baseline_metrics, load_scenario_outputs
 
 # Page config
 st.set_page_config(
@@ -22,21 +23,33 @@ st.set_page_config(
 )
 apply_theme()
 
-# Paths
-CT_DATA = Path(__file__).parent.parent / "data"
-
-# Load data
 @st.cache_data
 def load_scenario_data():
-    with open(CT_DATA / "scenario_outputs.json") as f:
-        return json.load(f)
+    return load_scenario_outputs()
 
 data = load_scenario_data()
 metadata = data["metadata"]
+baseline_metrics = load_baseline_metrics()
 
 # Header
-st.title("⚙️ Methodology & Assumptions")
-st.markdown("**Transparency, data sources, and validation protocol**")
+st.markdown(
+    """
+<div class="gl-hero">
+  <p class="gl-eyebrow">Methodology Guardrails</p>
+  <h2>Assumptions & Validation</h2>
+  <p>Transparent definitions, uncertainty ranges, and pilot validation protocol for defensible claims.</p>
+</div>
+""",
+    unsafe_allow_html=True,
+)
+
+st.markdown("---")
+
+if not baseline_metrics.get("metadata", {}).get("private_comparator_available", False):
+    st.warning(
+        "Private-building distance comparator is not available in this repo yet. "
+        "All fairness metrics currently reference public-housing coverage only."
+    )
 
 st.markdown("---")
 

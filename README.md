@@ -45,6 +45,11 @@ python3 control_tower/precompute_scenarios.py
 streamlit run control_tower/Home.py
 ```
 
+Slide-sync checklist:
+- `docs/SLIDE_ALIGNMENT_CHECKLIST.md`
+- `control_tower/APP_WALKTHROUGH.md`
+- `control_tower/TEAM_RUNBOOK.md`
+
 Optional map enhancement:
 - add `control_tower/assets/hk_districts.geojson` for district boundary overlays.
 
