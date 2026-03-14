@@ -5,7 +5,7 @@ This guide points to the right documentation depending on what you need.
 ## Start Here
 
 ```bash
-cd /home/saleh/datahack
+cd <repo-root>
 source venv/bin/activate
 pip install -r control_tower/requirements.txt
 python control_tower/precompute_scenarios.py
