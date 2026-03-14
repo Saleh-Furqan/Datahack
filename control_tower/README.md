@@ -5,7 +5,7 @@ Interactive Streamlit app for presenting the DataHack 2026 recycling analysis.
 ## Quick Start
 
 ```bash
-cd <repo-root>
+cd /path/to/repo
 source venv/bin/activate
 pip install -r control_tower/requirements.txt
 python control_tower/precompute_scenarios.py
