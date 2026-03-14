@@ -7,4 +7,4 @@ from .scenario_engine import (
     scenario_comparison_table,
     top_beneficiary_estates,
 )
-
+from .theme import apply_theme

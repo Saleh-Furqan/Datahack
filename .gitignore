@@ -57,6 +57,7 @@ wheels/
 # Cache directories
 .cache/
 .claude/
+.streamlit/
 
 # Environment variables
 .env

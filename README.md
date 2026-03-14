@@ -40,8 +40,9 @@ python3 run_analysis.py
 
 ```bash
 source venv/bin/activate
+pip install -r control_tower/requirements.txt
 python3 control_tower/precompute_scenarios.py
-streamlit run control_tower/app.py
+streamlit run control_tower/Home.py
 ```
 
 Optional map enhancement:
