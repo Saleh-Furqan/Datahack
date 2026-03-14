@@ -1,121 +1,184 @@
 {
-  "focus_streams": {
+  "metadata": {
+    "private_comparator_available": false,
+    "private_comparator_source": null,
+    "underserved_threshold_m": 500,
+    "population_proxy_note": "Public housing population proxy = rental_flats * 2.7",
+    "vulnerability_source": "derived from textile burden (over500 share + median distance)"
+  },
+  "streams": {
     "glass": {
-      "stream": "Glass Bottles",
-      "total": 2789,
-      "public": 676,
-      "lockout": 75.8,
+      "label": "Glass",
+      "pattern": "Glass Bottles",
+      "total_points": 2789,
+      "public_points": 676,
+      "lockout_pct": 75.8,
       "tpd": 211,
-      "recovery": 5,
-      "med_est": 173,
-      "med_pb": 0,
-      "gap": 172.6,
-      "over500": 10,
-      "pop500": 82080
+      "recovery_pct": 5,
+      "median_estate_distance_m": 172.6,
+      "median_private_distance_m": null,
+      "equity_multiplier": null,
+      "estates_over_500m": 10,
+      "population_over_500m": 82080
     },
     "textiles": {
-      "stream": "Clothes",
-      "total": 746,
-      "public": 168,
-      "lockout": 77.5,
+      "label": "Textiles",
+      "pattern": "Clothes",
+      "total_points": 746,
+      "public_points": 168,
+      "lockout_pct": 77.5,
       "tpd": 388,
-      "recovery": 11,
-      "med_est": 440,
-      "med_pb": 0,
-      "gap": 440.4,
-      "over500": 106,
-      "pop500": 1031670
+      "recovery_pct": 11,
+      "median_estate_distance_m": 440.4,
+      "median_private_distance_m": null,
+      "equity_multiplier": null,
+      "estates_over_500m": 106,
+      "population_over_500m": 1031670
     },
     "hazardous": {
-      "stream": "Fluorescent Lamp",
-      "total": 1665,
-      "public": 517,
-      "lockout": 68.9,
+      "label": "Hazardous",
+      "pattern": "Fluorescent Lamp",
+      "total_points": 1665,
+      "public_points": 517,
+      "lockout_pct": 68.9,
       "tpd": 50,
-      "recovery": 30,
-      "med_est": 168,
-      "med_pb": 0,
-      "gap": 167.5,
-      "over500": 17,
-      "pop500": 127440
+      "recovery_pct": 30,
+      "median_estate_distance_m": 167.5,
+      "median_private_distance_m": null,
+      "equity_multiplier": null,
+      "estates_over_500m": 17,
+      "population_over_500m": 127440
     },
     "batteries": {
-      "stream": "Rechargeable Batteries",
-      "total": 2343,
-      "public": 1035,
-      "lockout": 55.8,
+      "label": "Batteries",
+      "pattern": "Rechargeable Batteries",
+      "total_points": 2343,
+      "public_points": 1035,
+      "lockout_pct": 55.8,
       "tpd": 40,
-      "recovery": 30,
-      "med_est": 142,
-      "med_pb": 0,
-      "gap": 142.0,
-      "over500": 4,
-      "pop500": 27810
+      "recovery_pct": 30,
+      "median_estate_distance_m": 142.0,
+      "median_private_distance_m": null,
+      "equity_multiplier": null,
+      "estates_over_500m": 4,
+      "population_over_500m": 27810
     },
     "ewaste": {
-      "stream": "Small Electrical and Electronic Equipment",
-      "total": 961,
-      "public": 453,
-      "lockout": 52.9,
+      "label": "E-waste",
+      "pattern": "Small Electrical and Electronic Equipment",
+      "total_points": 961,
+      "public_points": 453,
+      "lockout_pct": 52.9,
       "tpd": 42,
-      "recovery": 45,
-      "med_est": 170,
-      "med_pb": 0,
-      "gap": 170.3,
-      "over500": 16,
-      "pop500": 113130
+      "recovery_pct": 45,
+      "median_estate_distance_m": 170.3,
+      "median_private_distance_m": null,
+      "equity_multiplier": null,
+      "estates_over_500m": 16,
+      "population_over_500m": 113130
     }
   },
   "all_streams": {
     "Metals": {
-      "total": 6254,
-      "public": 3235,
-      "lockout": 48.3
+      "total_points": 6254,
+      "public_points": 3235,
+      "lockout_pct": 48.3
     },
     "Paper": {
-      "total": 5957,
-      "public": 2934,
-      "lockout": 50.7
+      "total_points": 5957,
+      "public_points": 2934,
+      "lockout_pct": 50.7
     },
     "Plastics": {
-      "total": 6036,
-      "public": 3012,
-      "lockout": 50.1
+      "total_points": 6036,
+      "public_points": 3012,
+      "lockout_pct": 50.1
     },
     "Glass": {
-      "total": 2789,
-      "public": 676,
-      "lockout": 75.8
+      "total_points": 2789,
+      "public_points": 676,
+      "lockout_pct": 75.8
     },
     "Food Waste": {
-      "total": 1569,
-      "public": 1159,
-      "lockout": 26.1
+      "total_points": 1569,
+      "public_points": 1159,
+      "lockout_pct": 26.1
     },
     "Textiles": {
-      "total": 746,
-      "public": 168,
-      "lockout": 77.5
+      "total_points": 746,
+      "public_points": 168,
+      "lockout_pct": 77.5
     },
     "Batteries": {
-      "total": 2343,
-      "public": 1035,
-      "lockout": 55.8
+      "total_points": 2343,
+      "public_points": 1035,
+      "lockout_pct": 55.8
     },
     "Hazardous": {
-      "total": 1665,
-      "public": 517,
-      "lockout": 68.9
+      "total_points": 1665,
+      "public_points": 517,
+      "lockout_pct": 68.9
     },
-    "E-Waste": {
-      "total": 961,
-      "public": 453,
-      "lockout": 52.9
+    "E-waste": {
+      "total_points": 961,
+      "public_points": 453,
+      "lockout_pct": 52.9
     },
     "Cartons": {
-      "total": 953,
-      "public": 406,
-      "lockout": 57.4
+      "total_points": 953,
+      "public_points": 406,
+      "lockout_pct": 57.4
     }
+  },
+  "fairness_metric": {
+    "name": "Textile Population Burden (>500m)",
+    "value_pct": 45.61,
+    "numerator_population": 1031670,
+    "denominator_population": 2262060,
+    "threshold_m": 500
+  },
+  "district_vulnerability": {
+    "top_districts": [
+      {
+        "district": "Tsuen Wan",
+        "vulnerability": 0.893,
+        "textile_over500_share": 0.857
+      },
+      {
+        "district": "Kowloon City",
+        "vulnerability": 0.797,
+        "textile_over500_share": 0.906
+      },
+      {
+        "district": "Sha Tin",
+        "vulnerability": 0.651,
+        "textile_over500_share": 0.697
+      },
+      {
+        "district": "North",
+        "vulnerability": 0.608,
+        "textile_over500_share": 0.64
+      },
+      {
+        "district": "Sham Shui Po",
+        "vulnerability": 0.572,
+        "textile_over500_share": 0.593
+      },
+      {
+        "district": "Southern",
+        "vulnerability": 0.516,
+        "textile_over500_share": 0.526
+      },
+      {
+        "district": "Kwun Tong",
+        "vulnerability": 0.496,
+        "textile_over500_share": 0.511
+      },
+      {
+        "district": "Wong Tai Sin",
+        "vulnerability": 0.495,
+        "textile_over500_share": 0.535
+      }
+    ]
   }
 }

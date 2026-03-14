@@ -60,5 +60,32 @@
     "issues": [
       "File not found (optional)"
     ]
+  },
+  "geo/private_buildings": {
+    "exists": false,
+    "readable": false,
+    "file_count": 0,
+    "sample_files": [],
+    "issues": [
+      "Geo files not found (optional)"
+    ]
+  },
+  "geo/recycling_stations": {
+    "exists": false,
+    "readable": false,
+    "file_count": 0,
+    "sample_files": [],
+    "issues": [
+      "Geo files not found (optional)"
+    ]
+  },
+  "geo/waste_facilities": {
+    "exists": false,
+    "readable": false,
+    "file_count": 0,
+    "sample_files": [],
+    "issues": [
+      "Geo files not found (optional)"
+    ]
   }
 }
