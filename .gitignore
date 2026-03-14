@@ -43,6 +43,8 @@ wheels/
 !data/processed/*.csv
 !data/processed/*.json
 !data/validation_report.json
+!control_tower/data/scenarios.json
+!control_tower/data/scenario_outputs.json
 
 # IDEs
 .vscode/
@@ -55,6 +57,7 @@ wheels/
 # Cache directories
 .cache/
 .claude/
+.streamlit/
 
 # Environment variables
 .env
@@ -78,3 +81,4 @@ wheels/
 
 # OS
 Thumbs.db
+*:Zone.Identifier

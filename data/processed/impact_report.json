@@ -1,0 +1,158 @@
+{
+  "metadata": {
+    "analysis_type": "complexity_lockout_approach2",
+    "underserved_threshold_m": 500,
+    "hub_service_radius_m": 800,
+    "num_hubs": 10
+  },
+  "fairness_metric": {
+    "name": "Textile Population Burden (>500m)",
+    "value_pct": 45.61,
+    "numerator_population": 1031670,
+    "denominator_population": 2262060,
+    "threshold_m": 500
+  },
+  "optimization_summary": {
+    "num_hubs_selected": 10,
+    "hub_service_radius_m": 800,
+    "hub_min_separation_m": 700,
+    "scoring_weights": {
+      "multistream_score_weight": 0.35,
+      "textile_rescue_weight": 0.55,
+      "equity_bonus_weight": 0.1
+    },
+    "unique_estates_covered": 47,
+    "unique_population_covered": 516240
+  },
+  "impact": {
+    "glass": {
+      "label": "Glass",
+      "before_estates_over_500m": 10,
+      "after_estates_over_500m": 10,
+      "delta_estates_over_500m": 0,
+      "before_population_over_500m": 82080,
+      "after_population_over_500m": 82080,
+      "population_saved": 0,
+      "median_distance_before_m": 172.6,
+      "median_distance_after_m": 169.0
+    },
+    "textiles": {
+      "label": "Textiles",
+      "before_estates_over_500m": 106,
+      "after_estates_over_500m": 83,
+      "delta_estates_over_500m": 23,
+      "before_population_over_500m": 1031670,
+      "after_population_over_500m": 730080,
+      "population_saved": 301590,
+      "median_distance_before_m": 440.4,
+      "median_distance_after_m": 372.5
+    },
+    "hazardous": {
+      "label": "Hazardous",
+      "before_estates_over_500m": 17,
+      "after_estates_over_500m": 17,
+      "delta_estates_over_500m": 0,
+      "before_population_over_500m": 127440,
+      "after_population_over_500m": 127440,
+      "population_saved": 0,
+      "median_distance_before_m": 167.5,
+      "median_distance_after_m": 165.0
+    },
+    "batteries": {
+      "label": "Batteries",
+      "before_estates_over_500m": 4,
+      "after_estates_over_500m": 4,
+      "delta_estates_over_500m": 0,
+      "before_population_over_500m": 27810,
+      "after_population_over_500m": 27810,
+      "population_saved": 0,
+      "median_distance_before_m": 142.0,
+      "median_distance_after_m": 132.6
+    },
+    "ewaste": {
+      "label": "E-waste",
+      "before_estates_over_500m": 16,
+      "after_estates_over_500m": 16,
+      "delta_estates_over_500m": 0,
+      "before_population_over_500m": 113130,
+      "after_population_over_500m": 113130,
+      "population_saved": 0,
+      "median_distance_before_m": 170.3,
+      "median_distance_after_m": 168.9
+    }
+  },
+  "diversion_model": {
+    "assumptions": {
+      "capture_factor_low": 0.2,
+      "capture_factor_high": 0.35,
+      "landfill_gate_fee_hkd_per_tonne": 365,
+      "model_note": "Additional diversion is estimated from stream-level unrecovered waste, share of population previously underserved (>500m), and share rescued by hubs."
+    },
+    "stream_details": {
+      "glass": {
+        "additional_low_tpd": 0.0,
+        "additional_high_tpd": 0.0,
+        "underserved_share": 0.0,
+        "rescue_ratio": 0.0
+      },
+      "textiles": {
+        "unrecovered_tpd": 345.32,
+        "underserved_share": 0.4561,
+        "rescue_ratio": 0.2923,
+        "additional_low_tpd": 9.208,
+        "additional_high_tpd": 16.114
+      },
+      "hazardous": {
+        "additional_low_tpd": 0.0,
+        "additional_high_tpd": 0.0,
+        "underserved_share": 0.0,
+        "rescue_ratio": 0.0
+      },
+      "batteries": {
+        "additional_low_tpd": 0.0,
+        "additional_high_tpd": 0.0,
+        "underserved_share": 0.0,
+        "rescue_ratio": 0.0
+      },
+      "ewaste": {
+        "additional_low_tpd": 0.0,
+        "additional_high_tpd": 0.0,
+        "underserved_share": 0.0,
+        "rescue_ratio": 0.0
+      }
+    },
+    "additional_diversion_tpd_low": 9.21,
+    "additional_diversion_tpd_high": 16.11,
+    "additional_diversion_annual_tonnes_low": 3361,
+    "additional_diversion_annual_tonnes_high": 5882,
+    "landfill_savings_hkd_per_year_low": 1226734,
+    "landfill_savings_hkd_per_year_high": 2146784,
+    "capex_hkd_min": 20000000,
+    "capex_hkd_max": 50000000,
+    "payback_years_best_case": 9.32,
+    "payback_years_worst_case": 40.76
+  },
+  "cost_summary": {
+    "num_hubs": 10,
+    "capex_range_hkd": [
+      20000000,
+      50000000
+    ],
+    "additional_diversion_tpd_range": [
+      9.21,
+      16.11
+    ],
+    "additional_diversion_annual_tonnes_range": [
+      3361,
+      5882
+    ],
+    "landfill_savings_hkd_per_year_range": [
+      1226734,
+      2146784
+    ],
+    "payback_years_range": [
+      9.32,
+      40.76
+    ]
+  }
+}

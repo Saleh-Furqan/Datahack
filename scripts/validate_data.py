@@ -13,11 +13,13 @@ import json
 import re
 import sys
 from pathlib import Path
+from typing import List, Optional
 
 import pandas as pd
 
 ROOT = Path(__file__).parent.parent
 RAW_DIR = ROOT / "data" / "raw"
+GEO_DIR = ROOT / "data" / "geo"
 REPORT_PATH = ROOT / "data" / "validation_report.json"
 
 HK_BOUNDS = {
@@ -28,7 +30,7 @@ HK_BOUNDS = {
 }
 
 
-def parse_flat_count(value: object) -> int | None:
+def parse_flat_count(value: object) -> Optional[int]:
     """Extract rental-flat integer from values like '1 000 * as at 31.12.2025'."""
     if isinstance(value, dict):
         value = value.get("en") or value.get("zh-Hant") or value.get("zh-Hans")
@@ -196,6 +198,20 @@ def optional_file_status(path: Path) -> dict:
     }
 
 
+def optional_geo_status(folder: Path, patterns: List[str]) -> dict:
+    files: List[Path] = []
+    for pattern in patterns:
+        files.extend(folder.glob(pattern))
+    files = sorted(set(files))
+    return {
+        "exists": bool(files),
+        "readable": bool(files),
+        "file_count": len(files),
+        "sample_files": [str(f.relative_to(ROOT)) for f in files[:5]],
+        "issues": [] if files else ["Geo files not found (optional)"],
+    }
+
+
 def main() -> int:
     print("DataHack 2026 - Data Validation")
     print("=" * 50)
@@ -210,6 +226,15 @@ def main() -> int:
         "recycling_stations.csv": optional_file_status(RAW_DIR / "recycling_stations.csv"),
         "private_buildings.csv": optional_file_status(RAW_DIR / "private_buildings.csv"),
         "private_buildings.json": optional_file_status(RAW_DIR / "private_buildings.json"),
+        "geo/private_buildings": optional_geo_status(
+            GEO_DIR / "private_buildings", ["*.gml", "*.geojson", "*.gpkg", "*.shp"]
+        ),
+        "geo/recycling_stations": optional_geo_status(
+            GEO_DIR / "recycling_stations", ["*.gdb", "*.geojson", "*.gpkg", "*.shp"]
+        ),
+        "geo/waste_facilities": optional_geo_status(
+            GEO_DIR / "waste_facilities", ["*.gdb", "*.geojson", "*.gpkg", "*.shp"]
+        ),
     }
 
     REPORT_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -238,6 +263,17 @@ def main() -> int:
             print(f"  - {issue}")
 
     print("\nReport saved to data/validation_report.json")
+    private_ready = (
+        results["private_buildings.csv"]["exists"]
+        or results["private_buildings.json"]["exists"]
+        or results["geo/private_buildings"]["exists"]
+    )
+    if not private_ready:
+        print(
+            "Note: private-building coordinates not found. "
+            "Approach2 runs, but private-vs-public equity multipliers are omitted."
+        )
+
     if has_required_failure:
         print("Validation failed for required datasets.")
         return 1

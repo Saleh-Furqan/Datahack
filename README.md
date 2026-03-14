@@ -1,86 +1,95 @@
-# DataHack 2026 - Open-Access Gap in Hong Kong Recycling
+# DataHack 2026 - Complexity Lockout Analysis
 
-This repository contains our CUHK DataHack 2026 analysis of recycling accessibility in Hong Kong.
+This repository contains our current competition approach: identify material-specific recycling lockout, optimize 10 micro-hub locations, and quantify impact with explicit assumptions.
 
-## Current Verified Finding (March 13, 2026)
+## Verified Baseline (Current Repo State)
 
-- Total collection points analyzed: **8,858**
-- Public-access points: **5,301 (59.8%)**
-- Access-restricted points: **3,557 (40.2%)**
-- Median nearest distance to a point:
-  - All points: **27m**
-  - Public-only points: **39m**
-  - Median penalty: **+12m**
-- Estates with severe openness penalty (>=80m): **16 estates**
-- Population proxy in severe-penalty estates: **31,590 residents**
+Using available required datasets (`collection_points.csv`, `public_housing.json`):
 
-## Quick Start (Teammates)
+- Collection points: 8,858 total, 5,301 public
+- Public housing estates: 241 (population proxy: 2,262,060)
+- Textiles lockout: 77.5% (public points are 168 of 746)
+- Public housing textile median distance: 440m
+- Public housing estates >500m from public textile points: 106
+- Population >500m for textiles: 1,031,670
+- Fairness metric (textile population burden >500m): 45.6%
+
+Current optimization output:
+
+- 10 hubs selected across 10 districts
+- Unique coverage within 800m: 47 estates, 516,240 residents
+- Textiles >500m: 106 -> 83 estates
+- Textile population saved from >500m zone: 301,590
+
+## Important Methodology Note
+
+Private-building coordinates are not currently present in this repo, so private-vs-public distance multipliers are intentionally omitted in outputs. The code supports them if private-building geodata is added.
+
+## Reproducible Run
 
 ```bash
-git clone https://github.com/Saleh-Furqan/Datahack.git
-cd Datahack
-
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+
+python3 scripts/validate_data.py
+python3 run_analysis.py
 ```
 
-### 1) Download required raw datasets
+## Control Tower Demo App
 
-Run:
+```bash
+source venv/bin/activate
+pip install -r control_tower/requirements.txt
+python3 control_tower/precompute_scenarios.py
+streamlit run control_tower/Home.py
+```
+
+Slide-sync checklist:
+- `docs/SLIDE_ALIGNMENT_CHECKLIST.md`
+- `control_tower/APP_WALKTHROUGH.md`
+- `control_tower/TEAM_RUNBOOK.md`
+
+Optional map enhancement:
+- add `control_tower/assets/hk_districts.geojson` for district boundary overlays.
+
+## Output Files
+
+Data:
+
+- `data/processed/baseline_metrics.json`
+- `data/processed/optimized_hubs.csv`
+- `data/processed/estates_full_analysis.csv`
+- `data/processed/impact_report.json`
+
+Core presentation visuals (locked narrative):
+
+- `visualizations/01_landfill_composition.png` (hero stream: textiles)
+- `visualizations/02_stream_inequality.png` (single fairness metric)
+- `visualizations/03_textiles_deep_dive.png` (optimization map)
+- `visualizations/06_sensitivity_assumptions.png` (sensitivity + assumptions)
+
+Optional exploration:
+
+- `visualizations/05_interactive_map.html`
+
+## Data Contract
+
+Required:
+
+- `data/raw/collection_points.csv`
+- `data/raw/public_housing.json`
+
+Optional:
+
+- `data/raw/private_buildings.csv` or `data/raw/private_buildings.json`
+- `data/geo/private_buildings/*` (gml/geojson/gpkg/shp)
+- `data/raw/recycling_stations.csv` or `data/geo/recycling_stations/*`
+
+Use:
 
 ```bash
 python3 scripts/download_data.py
 ```
 
-Then manually download and place these files in `data/raw/`:
-
-- `collection_points.csv`
-- `public_housing.json`
-
-### 2) Validate data
-
-```bash
-python3 scripts/validate_data.py
-```
-
-### 3) Run analysis
-
-```bash
-python3 run_public_access_analysis.py
-```
-
-## Outputs
-
-After running analysis:
-
-- `data/processed/estates_access_gap.csv`
-- `data/processed/access_gap_stats.json`
-- `visualizations/open_access_gap.png`
-- `visualizations/access_gap_map.html`
-
-## Repository Layout
-
-```text
-data/
-  raw/                  # Local downloaded datasets (not committed)
-  processed/            # Committed analysis outputs
-scripts/
-  download_data.py
-  validate_data.py
-run_public_access_analysis.py
-visualizations/
-docs/
-```
-
-## Team Workflow
-
-```bash
-git checkout -b <feature-name>
-# make changes
-git add .
-git commit -m "Describe change"
-git push -u origin <feature-name>
-```
-
-Then open a PR to `main` so everyone can review.
+for official source URLs and expected locations.

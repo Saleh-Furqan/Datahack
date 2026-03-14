@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""
-Print dataset source links and expected local filenames.
-Datasets are downloaded manually from browser links.
-"""
+"""Print dataset source links and expected local paths for approach2."""
 
 from pathlib import Path
 
@@ -26,13 +23,13 @@ DATASETS = [
         "priority": "OPTIONAL",
         "name": "Open Space Database of Recycling Stations",
         "url": "https://data.gov.hk/en-data/dataset/hk-epd-wrrteam-recycling-station",
-        "save_as": "data/raw/recycling_stations.csv",
+        "save_as": "data/raw/recycling_stations.csv or data/geo/recycling_stations/*.gdb",
     },
     {
         "priority": "OPTIONAL",
         "name": "Private Buildings Database",
         "url": "https://data.gov.hk/en-data/dataset/hk-had-json1-db-of-private-buildings-in-hong-kong",
-        "save_as": "data/raw/private_buildings.csv or data/raw/private_buildings.json",
+        "save_as": "data/raw/private_buildings.csv/json or data/geo/private_buildings/*",
     },
 ]
 
@@ -52,7 +49,7 @@ def main() -> None:
     print("=" * 52)
     print("After downloading required files, run:")
     print("  python3 scripts/validate_data.py")
-    print("  python3 run_public_access_analysis.py")
+    print("  python3 run_analysis.py")
 
 
 if __name__ == "__main__":

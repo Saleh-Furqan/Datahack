@@ -1,32 +1,37 @@
-# Project Status - DataHack 2026
+# Project Status
 
-**Last updated:** March 13, 2026
+**Branch:** `approach2`  
+**Date:** March 14, 2026  
+**Status:** Analysis pipeline complete and reproducible
 
-## Current State
+## Pipeline Health
 
-Analysis pipeline is working end-to-end with validated inputs.
+- `scripts/validate_data.py` passes required datasets.
+- `run_analysis.py` completes all phases and regenerates outputs.
+- Visuals are regenerated from current code and data.
+- Deck narrative is locked to 4 core visuals (hero, fairness, map, sensitivity).
 
-## Verified Metrics
+## Current Verified Metrics
 
-- Total points: 8,858
-- Public-access points: 5,301 (59.8%)
-- Restricted points: 3,557 (40.2%)
-- Median distance (all points): 27m
-- Median distance (public-only): 39m
-- Median openness penalty: +12m
-- Severe-penalty estates (>=80m): 16
-- Population proxy in severe-penalty estates: 31,590
+- Collection points: 8,858 total, 5,301 public.
+- Public housing: 241 estates, population proxy 2,262,060.
+- Textiles lockout: 77.5%.
+- Textiles underserved (>500m): 106 estates, 1,031,670 residents.
+- Fairness metric (textile population burden >500m): 45.6%.
+- After 10 hubs: 83 estates >500m, 301,590 residents saved.
+- Unique hub coverage (800m): 47 estates, 516,240 residents.
+- Modeled diversion: 3,361 to 5,882 tonnes/year.
+- Modeled payback: 9.32 to 40.76 years.
 
-## Completed
+## Known Constraints
 
-- [x] Rebuilt `scripts/validate_data.py` with required/optional dataset checks
-- [x] Hardened `run_public_access_analysis.py` (robust flat parsing, reproducible map sampling)
-- [x] Regenerated processed outputs and visualizations
-- [x] Updated onboarding docs for teammates
+- Private-building coordinates are not currently loaded.
+- Therefore, private-vs-public distance multipliers are omitted.
+- Diversion and payback are assumption-driven model outputs, not observed measurements.
+- Sensitivity assumptions are exported to `visualizations/06_sensitivity_assumptions.png`.
 
-## Next Work (Team)
+## Ready to Do
 
-- [ ] Build `proposed_hubs` file for top severe-penalty estates
-- [ ] Add final slide deck in `presentation/`
-- [ ] Add concise methodology + assumptions slide notes
-- [ ] Rehearse 8-10 minute delivery
+- Finalize deck with locked metrics from processed JSON files.
+- Add explicit assumptions and limitations slide notes.
+- Rehearse delivery and Q&A.

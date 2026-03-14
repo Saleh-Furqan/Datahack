@@ -1,59 +1,80 @@
-# Next Steps for Team Collaboration
+# Next Steps (Methodical Execution)
 
-## 1) Pull latest `main`
+## Step 1 - Freeze Truth Source (Do First)
 
-```bash
-git checkout main
-git pull origin main
-```
-
-## 2) Set up local environment
+Run and freeze outputs:
 
 ```bash
-python3 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
-```
-
-## 3) Ensure required data exists
-
-Required files under `data/raw/`:
-
-- `collection_points.csv`
-- `public_housing.json`
-
-Run:
-
-```bash
 python3 scripts/validate_data.py
+python3 run_analysis.py
 ```
 
-## 4) Re-run baseline analysis
+Use only these files as the single source of truth:
 
-```bash
-python3 run_public_access_analysis.py
-```
+- `data/processed/baseline_metrics.json`
+- `data/processed/optimized_hubs.csv`
+- `data/processed/impact_report.json`
 
-Expected outputs:
+Do not use old numbers from archived docs.
 
-- `data/processed/estates_access_gap.csv`
-- `data/processed/access_gap_stats.json`
-- `visualizations/open_access_gap.png`
-- `visualizations/access_gap_map.html`
+## Step 2 - Slide Content Lock
 
-## 5) Split team work
+Create a one-page metric sheet (copied from JSON outputs) and lock:
 
-- Person A: Build top-15 hub placement proposal (`proposed_hubs.csv` + map layer).
-- Person B: Build final deck and pull charts/maps from `visualizations/`.
-- Both: Practice final pitch and Q&A.
+- Textiles lockout %
+- Fairness metric (textile population burden >500m)
+- Textiles estates >500m before/after
+- Textiles population saved
+- Unique hub coverage
+- Diversion and payback ranges
 
-## 6) Collaboration rule
+Every slide number must trace back to one of the three files above.
 
-Use short feature branches and PRs so changes do not collide:
+## Step 3 - Build the Deck (8 Slides)
 
-```bash
-git checkout -b feature/<name>
-git add .
-git commit -m "..."
-git push -u origin feature/<name>
-```
+1. Problem: lockout by stream.
+2. Why textiles is the bottleneck.
+3. Spatial burden by district.
+4. Method (objective, thresholds, constraints).
+5. Proposed 10 hubs map.
+6. Before/after impact.
+7. Economics with assumption box.
+8. Implementation plan and pilot recommendation.
+
+Use these locked visuals (no extras unless needed for Q&A):
+
+- `visualizations/01_landfill_composition.png`
+- `visualizations/02_stream_inequality.png`
+- `visualizations/03_textiles_deep_dive.png`
+- `visualizations/06_sensitivity_assumptions.png`
+
+If you need an interactive demo layer for backup:
+
+- `visualizations/05_interactive_map.html`
+
+## Step 4 - Add Assumptions Slide Notes
+
+Include concise assumptions:
+
+- 500m underserved threshold
+- 800m hub service radius
+- Population proxy (`rental_flats * 2.7`)
+- Diversion model capture factors (0.20 to 0.35)
+- Landfill gate fee (HK$365/tonne)
+
+## Step 5 - Presentation QA
+
+Before final submission:
+
+- Verify every number in slides against JSON outputs.
+- Remove private-comparator claims unless private geodata is added and rerun.
+- Practice 2 complete runs (target 8-10 minutes + Q&A).
+- Prepare 3 expected challenges:
+  - "Why these thresholds?"
+  - "How robust are cost estimates?"
+  - "Why does textiles dominate impact?"
+
+## Optional Upgrade (Only If Time)
+
+Add private-building geodata (`data/geo/private_buildings/*` or `data/raw/private_buildings.csv/json`) and rerun to enable private-vs-public comparator metrics.

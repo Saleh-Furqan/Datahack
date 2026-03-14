@@ -1,46 +1,58 @@
-# Final Strategy - DataHack 2026
+# Final Strategy (Approach 2)
 
-**Project title:** Hidden Inequality in Recycling Access  
-**Last updated:** March 13, 2026
+## Core Thesis
 
-## Core Story
+Hong Kong has many recycling points in total, but low-value streams (especially textiles and glass) are highly locked behind non-public locations. This creates a practical access barrier for public housing residents and contributes to low recovery.
 
-Hong Kong appears very well covered by recycling points at first glance, but a large share of points are not open to everyone.
+## What Is Strong and Defensible
 
-Our analysis compares:
+- We measure lockout directly from `accessibilty_notes`.
+- We quantify stream-specific distance barriers for all 241 public housing estates.
+- We optimize hub placement with a transparent greedy max-coverage approach.
+- We add equity-prioritized scoring (textile rescue + district vulnerability bonus).
+- We produce a complete before/after impact table for each focus stream.
 
-1. **Nominal coverage** using all points.
-2. **Usable coverage** using only public-access points.
+## Current Verified Story
 
-## Verified Evidence
+- Textiles lockout is the worst (77.5%).
+- Textiles has the largest access barrier (106 estates >500m).
+- Fairness metric (textile population burden >500m) is 45.6%.
+- 10 optimized hubs reduce textiles underserved estates from 106 to 83.
+- 301,590 residents are moved out of the >500m textile-access zone.
 
-- 8,858 total collection points
-- 5,301 public-access points (59.8%)
-- 3,557 restricted points (40.2%)
-- Median nearest distance shifts from 27m to 39m (+12m) when restricted points are excluded
-- 16 estates have severe openness penalties (>=80m), affecting a population proxy of 31,590
+## Visual Story Lock (Keep It Uncluttered)
 
-## Why This Angle Works
+Use exactly four core visuals:
 
-- It is honest: citywide coverage is strong.
-- It is still meaningful: restrictions create local inequity.
-- It is actionable: target severe-penalty estates with new public-access hubs.
+1. Hero stream (textiles): baseline barrier and before/after improvement.
+2. One fairness metric: textile population burden beyond 500m.
+3. One optimization map: underserved estates + selected hub locations.
+4. One sensitivity/assumption slide: payback range and modeling bounds.
 
-## Recommended Intervention
+## What We Will Not Overclaim
 
-- Prioritize the top severe-penalty estates.
-- Propose 10-15 additional **public-access** micro-hubs near those estates.
-- Measure impact by penalty reduction per estate after proposed placement.
+- We do not claim private-vs-public equity multipliers unless private-building coordinates are loaded.
+- We label diversion and payback as modeled estimates based on explicit assumptions.
+- We present assumptions in-slide (capture factors, gate fee, threshold definitions).
 
-## Deliverables for Submission
+## Recommended 8-Slide Arc
 
-- `visualizations/open_access_gap.png` (core chart)
-- `visualizations/access_gap_map.html` (interactive map)
-- `data/processed/estates_access_gap.csv` (estate-level results)
-- `data/processed/access_gap_stats.json` (summary metrics)
+1. Problem framing: lockout by material stream.
+2. Evidence: access barriers by stream, focus on textiles.
+3. Spatial pattern: district-level textile access burden.
+4. Method: greedy placement objective and constraints.
+5. Solution: 10 hub locations and coverage.
+6. Impact: before/after estates and population.
+7. Economics: modeled diversion and payback with assumptions.
+8. Implementation: pilot sequence and measurement plan.
 
-## Presentation Hook
+## Q&A-Ready Methodology Points
 
-> "Hong Kong has 8,858 recycling points, but only 59.8% are publicly accessible.  
-> Citywide impact is modest (+12m median), yet 16 estates face severe openness penalties (>=80m).  
-> We show exactly where targeted public-access hubs can close that equity gap."
+- Why 500m threshold: consistent underserved boundary in our analysis.
+- Why 800m hub radius: practical walkable catchment for incremental service.
+- Why textiles moves most: highest lockout + largest baseline underserved population.
+- Why payback is wide: conservative-to-optimistic capture assumptions.
+
+## Immediate Risk to Manage
+
+If private-building geodata remains unavailable, remove all private comparator claims from final slides and keep the narrative centered on public-housing lockout and underserved reduction.
