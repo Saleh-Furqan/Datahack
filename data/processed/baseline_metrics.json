@@ -1,0 +1,121 @@
+{
+  "focus_streams": {
+    "glass": {
+      "stream": "Glass Bottles",
+      "total": 2789,
+      "public": 676,
+      "lockout": 75.8,
+      "tpd": 211,
+      "recovery": 5,
+      "med_est": 173,
+      "med_pb": 0,
+      "gap": 172.6,
+      "over500": 10,
+      "pop500": 82080
+    },
+    "textiles": {
+      "stream": "Clothes",
+      "total": 746,
+      "public": 168,
+      "lockout": 77.5,
+      "tpd": 388,
+      "recovery": 11,
+      "med_est": 440,
+      "med_pb": 0,
+      "gap": 440.4,
+      "over500": 106,
+      "pop500": 1031670
+    },
+    "hazardous": {
+      "stream": "Fluorescent Lamp",
+      "total": 1665,
+      "public": 517,
+      "lockout": 68.9,
+      "tpd": 50,
+      "recovery": 30,
+      "med_est": 168,
+      "med_pb": 0,
+      "gap": 167.5,
+      "over500": 17,
+      "pop500": 127440
+    },
+    "batteries": {
+      "stream": "Rechargeable Batteries",
+      "total": 2343,
+      "public": 1035,
+      "lockout": 55.8,
+      "tpd": 40,
+      "recovery": 30,
+      "med_est": 142,
+      "med_pb": 0,
+      "gap": 142.0,
+      "over500": 4,
+      "pop500": 27810
+    },
+    "ewaste": {
+      "stream": "Small Electrical and Electronic Equipment",
+      "total": 961,
+      "public": 453,
+      "lockout": 52.9,
+      "tpd": 42,
+      "recovery": 45,
+      "med_est": 170,
+      "med_pb": 0,
+      "gap": 170.3,
+      "over500": 16,
+      "pop500": 113130
+    }
+  },
+  "all_streams": {
+    "Metals": {
+      "total": 6254,
+      "public": 3235,
+      "lockout": 48.3
+    },
+    "Paper": {
+      "total": 5957,
+      "public": 2934,
+      "lockout": 50.7
+    },
+    "Plastics": {
+      "total": 6036,
+      "public": 3012,
+      "lockout": 50.1
+    },
+    "Glass": {
+      "total": 2789,
+      "public": 676,
+      "lockout": 75.8
+    },
+    "Food Waste": {
+      "total": 1569,
+      "public": 1159,
+      "lockout": 26.1
+    },
+    "Textiles": {
+      "total": 746,
+      "public": 168,
+      "lockout": 77.5
+    },
+    "Batteries": {
+      "total": 2343,
+      "public": 1035,
+      "lockout": 55.8
+    },
+    "Hazardous": {
+      "total": 1665,
+      "public": 517,
+      "lockout": 68.9
+    },
+    "E-Waste": {
+      "total": 961,
+      "public": 453,
+      "lockout": 52.9
+    },
+    "Cartons": {
+      "total": 953,
+      "public": 406,
+      "lockout": 57.4
+    }
+  }
+}
