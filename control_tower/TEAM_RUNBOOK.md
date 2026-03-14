@@ -7,7 +7,7 @@ This runbook is for teammates who need to run, verify, edit, and present the app
 If analysis outputs already exist, run:
 
 ```bash
-cd /home/saleh/datahack
+cd <repo-root>
 source venv/bin/activate
 python control_tower/precompute_scenarios.py
 streamlit run control_tower/Home.py
